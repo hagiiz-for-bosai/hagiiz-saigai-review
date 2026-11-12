@@ -19,6 +19,8 @@ from datetime import date
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from openpyxl import load_workbook
 
+import bunsho
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -40,11 +42,16 @@ def load(path):
                 if i < len(h) and h[i]:
                     if v is None:
                         v = ""
+                    elif hasattr(v, "strftime"):
+                        v = v.strftime("%Y-%m-%d")  # Googleから書き出すと日付になることがある
                     elif isinstance(v, float) and v.is_integer():
                         v = str(int(v))
                     else:
                         v = str(v).strip()
                     rec[h[i]] = v
+            code = rec.get("全国地方公共団体コード", "")
+            if code.isdigit() and len(code) < 6:
+                rec["全国地方公共団体コード"] = code.zfill(6)  # 先頭の0が消えていたら戻す
             out.append(rec)
         D[ws.title] = out
     return D
@@ -67,8 +74,27 @@ def num(v):
 
 
 # ---------------- データを組み立てる ----------------
-def build(D):
+def build(D, B=None, preview=False):
+    """B：文章（bunsho.load の結果）。確認済みの文章だけ使う。試作（preview）では下書きも出す"""
     M = {}
+    B = B or {}
+
+    def doc(rid, row=None):
+        x = B.get(rid)
+        if not x:
+            return None
+        ok = x["state"] == "確認済み"
+        if not ok and not preview:
+            return None
+        return {"s": x["sections"], "ch": x["chapters"], "draft": not ok}
+
+    videos = defaultdict(list)
+    for v in D.get("動画", []):
+        if v.get("状態") == "公開" and youtube_embed(v.get("URL", "")):
+            videos[v.get("対象ID", "")].append({"embed": youtube_embed(v["URL"]), "t": v.get("タイトル", ""), "date": v.get("公開日", "")})
+    for k in videos:
+        videos[k].sort(key=lambda v: v["date"], reverse=True)
+
     pub_src = [s for s in D["資料"] if s.get("公開", "する") != "しない"]
     S = {s["資料ID"]: s for s in pub_src}
     A = {a["改正ID"]: a for a in D.get("改正", [])}
@@ -81,6 +107,9 @@ def build(D):
         d["year"] = d.get("発生年月日", "")[:4]
         d["img"] = d.get("画像") or "typhoon"
         d["name"] = re.sub(r"（.*?）", "", d["災害名"])
+        d["doc"] = doc(d["災害ID"])
+        d["note"] = d.get("NoteのURL", "")
+        d["videos"] = videos.get(d["災害ID"], [])
         dis.append(d)
     dis.sort(key=lambda d: d["発生年月日"])
     DI = {d["災害ID"]: d for d in dis}
@@ -88,7 +117,10 @@ def build(D):
     for l in D["法律"]:
         l = dict(l)
         l["open"] = l.get("サイトの公開", "する") == "する"
-        l["embed"] = youtube_embed(l.get("動画URL", ""))
+        l["videos"] = videos.get(l["法律ID"], [])
+        l["embed"] = l["videos"][0]["embed"] if l["videos"] else youtube_embed(l.get("動画URL", ""))
+        l["doc"] = doc(l["法律ID"])
+        l["note"] = l.get("NoteのURL", "")
         laws.append(l)
     laws.sort(key=lambda l: l["制定年"])
     L = {l["法律ID"]: l for l in laws}
@@ -138,6 +170,11 @@ def build(D):
         t["src"] = S.get(t.get("根拠の資料ID", ""))
         t["cards"] = [c for c in ids(t.get("根拠カードID")) if c in cards]
         t["tags"] = ids(t.get("タグ", ""))
+        t["doc"] = doc(t["問いID"])
+        if t["doc"] and t["doc"]["s"].get("あのとき"):
+            t["then_html"] = t["doc"]["s"]["あのとき"]
+        t["note"] = t.get("NoteのURL", "")
+        t["videos"] = videos.get(t["問いID"], [])
         qs.append(t)
     qs.sort(key=lambda t: t["order"])
     kind_n = {}
@@ -185,7 +222,7 @@ def build(D):
         l["amends"] = sorted([a for a in D.get("改正", []) if a["法律ID"] == l["法律ID"]], key=lambda a: a["公布日"])
         l["qs"] = [t for t in qs if t["l"] is l and t["kind"] == "国会"]
         l["sources"] = [s for s in pub_src if s.get("法律ID") == l["法律ID"] and s["種類"] != "国会の議事録"]
-        l["lessons"] = sorted([dict(r, cards=[cards[c] for c in ids(r.get("根拠カードID")) if c in cards])
+        l["lessons"] = sorted([dict(r, cards=[cards[c] for c in ids(r.get("根拠カードID")) if c in cards], doc=doc(r["レッスンID"]))
                                for r in D.get("レッスン", []) if r.get("法律ID") == l["法律ID"]], key=lambda r: int(r["番号"]))
 
     # 被災した地域
@@ -234,6 +271,7 @@ def main():
     ap.add_argument("--preview", action="store_true")
     ap.add_argument("--api")
     ap.add_argument("--base")
+    ap.add_argument("--bunsho", help="文章（bunsho.json）。省略すると台帳と同じ場所の bunsho.json")
     a = ap.parse_args()
     cfg = {}
     cp = os.path.join(HERE, "config.json")
@@ -243,7 +281,9 @@ def main():
     base = (a.base or cfg.get("base_url", "")).rstrip("/")
 
     D = load(a.xlsx)
-    M = build(D)
+    bp = a.bunsho or os.path.join(os.path.dirname(os.path.abspath(a.xlsx)), "bunsho.json")
+    B = bunsho.load(bp)
+    M = build(D, B, preview=a.preview)
     env = Environment(loader=FileSystemLoader(os.path.join(HERE, "templates")), autoescape=select_autoescape(["html", "xml"]),
                       trim_blocks=True, lstrip_blocks=True)
     out = a.out
@@ -335,6 +375,8 @@ def main():
 
     print(f"{len(pages)}ページを書き出しました → {out}（公開する資料 {len(M['sources'])}件、未来への問い {len(open_q)}件、根拠カード {len(M['cards'])}枚）"
           + ("［試作モード：答えはこの端末だけに保存］" if not api else ""))
+    n_ok = sum(1 for x in B.values() if x["state"] == "確認済み")
+    print(f"文章：{len(B)}本を読みました（確認済み {n_ok}本" + ("。試作なので下書きも表示）" if a.preview else "だけ表示）"))
 
 
 if __name__ == "__main__":

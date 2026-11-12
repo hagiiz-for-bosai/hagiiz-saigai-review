@@ -16,6 +16,9 @@
 | `site/templates/` | ページのひな形（20枚） |
 | `site/static/` | 見た目（site.css）、動き（site.js）、災害の絵（img/） |
 | `site/apps-script/Code.gs` | 答えと受付の受け皿（Google Apps Script） |
+| `site/apps-script/台帳メニュー.gs` | 台帳に貼るメニュー（新しい行・文章をつくる・確認表・状態の取りこみ・サイトに反映する） |
+| `site/bunsho.py` | 文章（bunsho.json）を読んで、見出しごとのHTMLにする |
+| `bunsho.json` | 全ドキュメントのMarkdown（反映のたびに台帳のメニューが作る） |
 | `site/tools/build_daicho_v2.py` | 台帳v1 → v2 の移行（一度きり。もう使わない） |
 | `site/tools/add_munis.py` | 全国1,741市区町村の行を台帳に足す（何度実行しても同じ） |
 | `site/fonts/` | シェア画像用の日本語フォント（Noto Sans JP、OFL） |
@@ -76,6 +79,38 @@ python3 tools/add_munis.py ../daicho_v2.xlsx localgovjp-utf8.csv
 （今回、川越町 243434→243442、海津市 212202→212211 を直しました）。
 
 ---
+
+## 3.5 文章（Googleドキュメント）とサイト
+
+長い文章は、Googleドライブ「HagiiZ 災害レビュー/文章」のドキュメントが正本です（1つの対象に1ファイル）。
+
+| ドキュメント | サイトに出る場所 | 使う見出し |
+|---|---|---|
+| 災害の説明（D…） | 災害のページ | リード／あのとき／なぜ被害が大きくなったか／その後に変わったこと |
+| 法律の説明（L…） | 法律のページ | リード／何を決めた法律か／できたきっかけ／変わってきたこと |
+| レッスンの台本（R…） | 学ぶ | このレッスンで分かること／台本の小見出し（チャプター） |
+| 問いの背景（T…） | 問いのページ | あのとき／なぜ今も問いなのか／考えるヒント |
+
+- **サイトに出るのは、ドキュメント下の「管理」表で状態が「確認済み」のものだけ**（試作の書き出し `--preview` では下書きも「下書き」の印つきで出る）
+- 全体が（ ）で囲まれた段落（例：（防災士が書く））は、まだ書いていない欄として出さない
+- 「ここから下はNoteに貼らない」より下は、サイトにもNoteにも出さない
+- 動画は台帳の「動画」シート（状態＝公開）。対象IDの災害・法律・問いのページに出る
+- 台帳の「NoteのURL」を入れると、そのページに「Noteで読む」が出る
+
+### サイトに反映する（台帳のメニュー）
+台帳のメニュー「サイト → サイトに反映する」で、台帳（Excel）と全ドキュメント（Markdownを1つにまとめた `bunsho.json`）を、GitHubに1回のコミットで送ります。Cloudflareがそれを見て作り直します。
+
+最初に1回だけ：
+1. GitHub →（右上の顔）Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token
+   - Repository access：Only select repositories → `hagiiz-saigai-review`
+   - Permissions → Repository permissions → **Contents：Read and write**
+   - 期限は1年など。できた文字列（`github_pat_…`）をコピー
+2. 台帳 → 拡張機能 → Apps Script → 左の歯車「プロジェクトの設定」→ スクリプト プロパティ
+   - `GITHUB_TOKEN` ＝ コピーした文字列
+   - `GITHUB_REPO` ＝ `ikemotoatsuya-business/hagiiz-saigai-review`
+3. 台帳を開き直し、「サイト → サイトに反映する」。初回は権限の確認が出るので許可
+
+**以後、GitHubの `daicho_v2.xlsx` と `bunsho.json` は直接さわらない**（台帳とドキュメントが正本。反映のたびに上書きされる）。
 
 ## 4. 答えの受け皿をつくる（Google Apps Script）
 
