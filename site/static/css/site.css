@@ -397,3 +397,13 @@ details.fold[open] > summary::after{content:"－"}
   .toast{bottom:24px}
 }
 [data-pref-box]+[data-pref-box]{margin-top:22px}
+/* 文章（ドキュメント）から入る本文 */
+.prose p{margin:0 0 10px;line-height:1.9}
+.prose p:last-child{margin-bottom:0}
+.prose ul{margin:0 0 10px;padding-left:1.3em;line-height:1.8}
+.prose a{color:var(--ink);text-decoration-color:var(--pink);text-decoration-thickness:2px}
+.lead{padding:20px 0 4px;font-size:17px;font-weight:700}
+.doc .h3{font-size:17px;font-weight:900;margin:18px 0 6px;padding-left:10px;border-left:6px solid var(--pink)}
+.doc .h3:first-of-type{margin-top:6px}
+.chapters{margin:0;padding-left:1.4em;line-height:1.8;font-size:14px}
+.qhead__then p{margin:0}
