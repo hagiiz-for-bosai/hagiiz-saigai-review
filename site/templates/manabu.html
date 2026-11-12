@@ -20,7 +20,9 @@
 <div class="lesson" id="{{ r.レッスンID }}">
 <div class="lesson__h"><span class="mono">L{{ '%02d' % (r.番号|int) }}</span><span style="flex:1;font-size:17px;font-weight:900">{{ r.見出し }}</span><span class="mono small">{{ r.動画のチャプター開始 or '' }}</span></div>
 <div class="lesson__b">
-<span>{{ r['内容（1文）'] }}</span>
+{% if r.doc and r.doc.s.get('このレッスンで分かること') %}<div class="prose">{{ r.doc.s['このレッスンで分かること']|safe }}</div>{% else %}<span>{{ r['内容（1文）'] }}</span>{% endif %}
+{% if r.doc and r.doc.ch %}<span class="small" style="font-weight:900">チャプター{% if r.doc.draft %}（下書き）{% endif %}</span>
+<ol class="chapters">{% for c in r.doc.ch %}<li>{{ c.t }}</li>{% endfor %}</ol>{% endif %}
 {% if r.cards %}<span class="small" style="font-weight:900">このレッスンで使える根拠カード</span>
 {% for c in r.cards %}<div class="ev"><span class="mono">{{ c.id }}</span><span>{{ c.t }}{% if c.qs %}<br><span class="small">→ {% for t in c.qs[:2] %}<a href="{{ url('toi/' ~ t.slug ~ '/') }}">{{ t.h }}に答える</a>{% if not loop.last %}、{% endif %}{% endfor %}</span>{% endif %}</span></div>{% endfor %}{% endif %}
 </div>

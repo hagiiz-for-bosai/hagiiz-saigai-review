@@ -15,7 +15,7 @@
 </div>
 <p class="small" style="margin:12px 0 0;font-weight:900">{{ t.h }}</p>
 <h1 class="qhead__q glitch">{{ t.q }}</h1>
-<p class="qhead__then">{{ t.then }}</p>
+<div class="qhead__then">{% if t.then_html %}{{ t.then_html|safe }}{% else %}{{ t.then }}{% endif %}</div>
 {% if t.src %}<span class="qhead__src">もとの資料：{% if t.src.URL %}<a href="{{ t.src.URL }}" target="_blank" rel="noopener">{{ t.src.タイトル }}</a>{% else %}{{ t.src.タイトル }}{% endif %}</span>{% endif %}
 <div class="stats" style="margin-top:14px">
 <div class="stat stat--ink"><span class="stat__k">答え</span><span class="stat__v" data-toi-count>–</span></div>
@@ -27,6 +27,9 @@
 
 <div class="wrap two">
 <div>
+{{ m.docsec(t.doc, ['なぜ今も問いなのか', '考えるヒント']) }}
+{{ m.videos(t.videos, 'この問いを取り上げた動画') }}
+{% if t.note %}<div style="padding-top:12px">{{ m.note(t.note) }}</div>{% endif %}
 <section class="sec">
 <a class="btn btn--pink btn--big btn--pulse" href="#kotaeru"><span>根拠を選んで、答える</span><span class="mono">→</span></a>
 <p class="small mute" style="margin:10px 0 0">根拠カードを選んで1文書くだけ。5分ほどで、すぐにここへ載ります。</p>

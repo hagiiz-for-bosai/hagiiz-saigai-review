@@ -53,3 +53,18 @@
 <span class="ecard__body"><span class="ecard__t">{{ title }}</span><span class="ecard__d">{{ desc }}</span></span>
 </a>
 {% endmacro %}
+
+{% macro docsec(dc, keys, title='') %}{% if dc %}{% set have = keys|select('in', dc.s)|list %}{% if have %}
+<section class="sec doc">
+{% if title %}<h2 class="h2">{{ title }}</h2>{% endif %}
+{% if dc.draft %}<span class="label label--ink" style="margin-bottom:8px;display:inline-block">下書き（試作でだけ表示）</span>{% endif %}
+{% for k in have %}{% if title %}<h3 class="h3">{{ k }}</h3>{% else %}<h2 class="h2">{{ k }}</h2>{% endif %}<div class="prose">{{ dc.s[k]|safe }}</div>{% endfor %}
+</section>{% endif %}{% endif %}{% endmacro %}
+
+{% macro videos(vs, title) %}{% if vs %}
+<section class="sec" id="video">
+<h2 class="h2">{{ title }}</h2>
+{% for v in vs %}<div class="video" style="{% if not loop.first %}margin-top:12px{% endif %}"><iframe src="{{ v.embed }}" title="{{ v.t or title }}" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>{% if v.t %}<p class="small" style="margin:6px 0 0;font-weight:900">{{ v.t }}</p>{% endif %}{% endfor %}
+</section>{% endif %}{% endmacro %}
+
+{% macro note(u) %}{% if u %}<a class="linkrow" href="{{ u }}" target="_blank" rel="noopener"><span>Noteで読む</span><span class="mono">↗</span></a>{% endif %}{% endmacro %}

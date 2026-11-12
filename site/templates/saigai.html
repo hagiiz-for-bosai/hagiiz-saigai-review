@@ -14,6 +14,10 @@
 </section>
 {{ m.urgency(d) }}
 <div class="wrap">
+{% if d.doc and d.doc.s.get('リード') %}<div class="lead prose">{{ d.doc.s['リード']|safe }}</div>{% endif %}
+{{ m.videos(d.videos, '防災士の解説') }}
+{{ m.docsec(d.doc, ['あのとき', 'なぜ被害が大きくなったか', 'その後に変わったこと'], 'このファイルの中身') }}
+{% if d.note %}<div style="padding-top:12px">{{ m.note(d.note) }}</div>{% endif %}
 <section class="sec">
 <h2 class="h2">この災害を、8つの入口から</h2>
 <div class="cards cards--entry">

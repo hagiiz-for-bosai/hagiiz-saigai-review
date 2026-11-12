@@ -10,6 +10,7 @@
 </div>
 </section>
 <div class="wrap">
+{% if l.doc and l.doc.s.get('リード') %}<div class="lead prose">{{ l.doc.s['リード']|safe }}</div>{% endif %}
 <section class="sec" id="video">
 <h2 class="h2">防災士の解説</h2>
 <div class="video">
@@ -23,6 +24,8 @@
 {% endif %}
 </section>
 
+{{ m.docsec(l.doc, ['何を決めた法律か', 'できたきっかけ', '変わってきたこと'], 'この法律のこと') }}
+{% if l.note %}<div style="padding-top:12px">{{ m.note(l.note) }}</div>{% endif %}
 {% if l.qs %}
 <section class="sec">
 <h2 class="h2">この法律をつくった国会から生まれた問い</h2>
