@@ -226,13 +226,28 @@ def build(D, B=None, preview=False):
                                for r in D.get("レッスン", []) if r.get("法律ID") == l["法律ID"]], key=lambda r: int(r["番号"]))
 
     # 被災した地域
+    def plan_link(m):
+        """計画へのリンク：掲載ページ → 計画のPDF → 公式サイト（さがす入口）の順。
+        参加型なので、自動で集めた候補もそのまま出す。ただし人が「確認済み」にして
+        いないものは「未確認」と表示し、すぐ横に「ちがったら知らせる」を置く。"""
+        st = m.get("リンクの状態", "")
+        ok = "確認済み" in st and "未確認" not in st
+        u = "" if ok else "_u"
+        if m.get("地域防災計画のURL"):
+            return m["地域防災計画のURL"], "page" + u
+        if m.get("計画PDFのURL"):
+            return m["計画PDFのURL"], "pdf" + u
+        if m.get("公式サイトのURL（調べる起点）"):
+            return m["公式サイトのURL（調べる起点）"], "home"
+        return "", ""
+
     MU = {m["全国地方公共団体コード"]: m for m in D.get("自治体", [])}
     for d in dis:
         d["munis"] = []
         for m in D.get("災害×自治体", []):
             if m["災害ID"] == d["災害ID"]:
                 mm = dict(m)
-                mm["url"] = MU.get(m["全国地方公共団体コード"], {}).get("地域防災計画のURL", "")
+                mm["url"], mm["kind"] = plan_link(MU.get(m["全国地方公共団体コード"], {}))
                 d["munis"].append(mm)
 
     # 地域（全国）
@@ -240,10 +255,11 @@ def build(D, B=None, preview=False):
     for m in D.get("自治体", []):
         if m.get("種別") == "都道府県":
             prefs[m["全国地方公共団体コード"][:2]] = {"name": m["都道府県名"], "short": re.sub(r"(都|府|県)$", "", m["都道府県名"]) if m["都道府県名"] != "北海道" else "北海道",
-                                                    "code": m["全国地方公共団体コード"], "url": m.get("地域防災計画のURL", ""), "munis": OrderedDict(), "hit": False}
+                                                    "code": m["全国地方公共団体コード"], "url": plan_link(m)[0], "kind": plan_link(m)[1], "munis": OrderedDict(), "hit": False}
     for m in D.get("自治体", []):
         if m.get("種別") != "都道府県" and m["全国地方公共団体コード"][:2] in prefs:
-            prefs[m["全国地方公共団体コード"][:2]]["munis"][m["全国地方公共団体コード"]] = {"name": m["自治体名"], "url": m.get("地域防災計画のURL", ""), "dis": []}
+            u, k = plan_link(m)
+            prefs[m["全国地方公共団体コード"][:2]]["munis"][m["全国地方公共団体コード"]] = {"name": m["自治体名"], "url": u, "kind": k, "dis": []}
     for d in dis:
         if not d["open"]:
             continue
@@ -256,7 +272,7 @@ def build(D, B=None, preview=False):
             if code == pf["code"]:
                 pf.setdefault("dis", []).append(d)
                 continue
-            mu = pf["munis"].setdefault(code, {"name": m["今の自治体名"], "url": m.get("url", ""), "dis": []})
+            mu = pf["munis"].setdefault(code, {"name": m["今の自治体名"], "url": m.get("url", ""), "kind": m.get("kind", ""), "dis": []})
             mu["dis"].append(d)
     M.update(dis=dis, laws=laws, pairs=pairs, qs=qs, cards=cards, sources=pub_src, prefs=prefs, phen=P,
              n_src_all=len(pub_src))
