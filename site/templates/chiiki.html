@@ -26,12 +26,12 @@
 <div style="border:2px solid var(--ink)">
 <div class="muni" style="background:var(--ink);color:#fff" data-text="{{ p.name }}">
 <span class="muni__n">{{ p.name }}の計画</span>
-{% if p.url %}<a class="muni__l" href="{{ p.url }}" target="_blank" rel="noopener" style="color:#fff">計画をひらく →</a>{% else %}<span class="muni__l" style="color:#C9C9D2;font-weight:700">リンク準備中</span>{% endif %}
+{% if p.url %}<a class="muni__l" href="{{ p.url }}" target="_blank" rel="noopener" style="color:#fff">{{ {'page':'計画をひらく →','pdf':'計画（PDF）→','page_u':'計画をひらく（未確認）→','pdf_u':'計画（PDF・未確認）→','home':'公式サイトでさがす →'}[p.kind] }}</a>{% if p.kind.endswith('_u') %}<a class="muni__fix" href="{{ url('teikyo/') }}?kind=link">ちがったら知らせる</a>{% endif %}{% else %}<span class="muni__l" style="color:#C9C9D2;font-weight:700">リンク準備中</span>{% endif %}
 </div>
 {% for code, mu in p.munis.items() %}
 <div class="muni" data-text="{{ mu.name }}">
 <div style="display:flex;flex-direction:column"><span class="muni__n">{{ mu.name }}</span>{% for d in mu.dis %}<a class="muni__s" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/ima/') }}">{{ d.name }}で被災</a>{% endfor %}</div>
-{% if mu.url %}<a class="muni__l" href="{{ mu.url }}" target="_blank" rel="noopener">計画をひらく →</a>{% else %}<span class="muni__l muni__l--none">リンク準備中</span>{% endif %}
+{% if mu.url %}<a class="muni__l{% if mu.kind == 'home' %} muni__l--home{% endif %}" href="{{ mu.url }}" target="_blank" rel="noopener">{{ {'page':'計画をひらく →','pdf':'計画（PDF）→','page_u':'計画をひらく（未確認）→','pdf_u':'計画（PDF・未確認）→','home':'公式サイトでさがす →'}[mu.kind] }}</a>{% if mu.kind.endswith('_u') %}<a class="muni__fix" href="{{ url('teikyo/') }}?kind=link">ちがったら知らせる</a>{% endif %}{% else %}<span class="muni__l muni__l--none">リンク準備中</span>{% endif %}
 </div>
 {% endfor %}
 {% if not p.munis %}<div class="muni"><span class="muni__s">市区町村の一覧は、リンクの取りこみが終わると、ここに並びます。</span></div>{% endif %}

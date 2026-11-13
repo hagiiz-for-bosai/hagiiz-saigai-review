@@ -12,7 +12,7 @@
 {% for mu in d.munis %}
 <div class="muni">
 <div style="display:flex;flex-direction:column"><span class="muni__n">{{ mu.今の自治体名 }}</span><span class="muni__s">当時：{{ mu.当時の名称 }}</span></div>
-{% if mu.url %}<a class="muni__l" href="{{ mu.url }}" target="_blank" rel="noopener">計画をひらく →</a>{% else %}<span class="muni__l muni__l--none">リンク準備中</span>{% endif %}
+{% if mu.url %}<a class="muni__l{% if mu.kind == 'home' %} muni__l--home{% endif %}" href="{{ mu.url }}" target="_blank" rel="noopener">{{ {'page':'計画をひらく →','pdf':'計画（PDF）→','page_u':'計画をひらく（未確認）→','pdf_u':'計画（PDF・未確認）→','home':'公式サイトでさがす →'}[mu.kind] }}</a>{% if mu.kind.endswith('_u') %}<a class="muni__fix" href="{{ url('teikyo/') }}?kind=link">ちがったら知らせる</a>{% endif %}{% else %}<span class="muni__l muni__l--none">リンク準備中</span>{% endif %}
 </div>
 {% endfor %}
 </div>
