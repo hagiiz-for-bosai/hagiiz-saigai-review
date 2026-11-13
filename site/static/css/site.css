@@ -407,3 +407,5 @@ details.fold[open] > summary::after{content:"－"}
 .doc .h3:first-of-type{margin-top:6px}
 .chapters{margin:0;padding-left:1.4em;line-height:1.8;font-size:14px}
 .qhead__then p{margin:0}
+.muni__l--home{color:var(--mute);font-weight:700}
+.muni__fix{display:block;font-size:11px;color:var(--mute);text-decoration:underline;margin-top:2px;text-align:right}
