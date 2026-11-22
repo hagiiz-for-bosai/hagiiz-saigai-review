@@ -429,5 +429,9 @@
     });
     var kind = new URLSearchParams(location.search).get('kind') || (location.hash || '').replace('#', '');
     var sel = $('[name="kind"]', f); if (sel && kind) { $$('option', sel).forEach(function (o) { if (o.value === kind || o.getAttribute('data-k') === kind) sel.value = o.value; }); }
+    var qs = new URLSearchParams(location.search);
+    ['area', 'ref'].forEach(function (k) { var v = qs.get(k), inp = $('[name="' + k + '"]', f); if (v && inp && !inp.value) inp.value = v.slice(0, 120); });
+    var body = $('[name="body"]', f);
+    if (body && kind === 'dantai' && !body.value) body.placeholder = '例：〇〇大学の「△△」が載っていません（URL：…）／団体名がちがいます／掲載を取り下げてください';
   });
 })();
