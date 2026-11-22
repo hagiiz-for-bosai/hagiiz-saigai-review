@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ asset('vendor/leaflet/leaflet.css') }}">
+<script defer src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
+<script defer src="{{ asset('js/dantai_map.js') }}"></script>
+{% endblock %}
+{% block main %}
+{% set T = M.dantai %}
+<section class="qhead gridbg">
+<div class="wrap">
+<a class="crumb" href="{{ url('chiiki/') }}"><span class="mono">←</span>地域</a>
+<h1 class="h1">大学の<span class="mark">防災学生団体</span>の地図</h1>
+<p class="qhead__then">全国の大学・短期大学・高等専門学校 {{ "{:,}".format(T.n_schools) }}校と、Webで確認できた防災に関わる学生団体 {{ "{:,}".format(T.n_orgs) }}団体。点を押すと、その学校の団体が出ます。</p>
+</div>
+</section>
+<div class="wrap">
+<section class="sec">
+<div class="dlegend" aria-label="色の意味">
+<span><i class="dot dot--drr"></i>防災が主目的・活動の一部の団体がある</span>
+<span><i class="dot dot--rel"></i>関連の団体のみ（献血・防犯など）</span>
+<span><i class="dot dot--none"></i>Webで確認できる団体なし（2026年11月時点）</span>
+</div>
+<div class="dmap" data-dmap data-src="{{ asset('data/dantai.json') }}" data-fix="{{ url('teikyo/') }}?kind=dantai" role="region" aria-label="地図"></div>
+<p class="small mute" style="margin:6px 0 0">地図：国土地理院（地理院タイル）。団体のある学校 {{ "{:,}".format(T.n_has) }}校／Webで確認できる団体なし {{ "{:,}".format(T.n_none) }}校。同じ場所に重なる点は、地図を拡大すると分かれます。</p>
+</section>
+<section class="sec">
+{% include "_dantai_note.html" %}
+</section>
+<section class="sec">
+<h2 class="h2">都道府県ごとの一覧</h2>
+<p class="small mute">団体がある学校だけを並べています。団体名を押すと、確認に使った出典のページが開きます。</p>
+{% for pref, items in T.by_pref.items() %}
+{% set has = items|selectattr('orgs')|list %}
+<details class="dpref">
+<summary>{{ pref }}<span class="mono small">　団体のある学校 {{ has|length }}／{{ items|length }}校</span></summary>
+{% for it in has %}
+<div class="dschool">
+<div class="dschool__n">{{ it.s.name }}<span class="small mute">　{{ it.s.city_name }}</span></div>
+<ul class="dorgs">
+{% for o in it.orgs %}<li><a href="{{ o.evidence_url }}" target="_blank" rel="noopener nofollow">{{ o.name }}</a> <span class="dtag dtag--{{ o.rank }}">{{ o.drr_role }}</span>{% if o.org_type == '複数校の連合組織' %} <span class="dtag">連合</span>{% endif %}<span class="small mute">　{{ o.activity }}{% if o.activity_state and not o.activity_state.startswith('不明') %}／{{ o.activity_state }}{% endif %}</span></li>{% endfor %}
+</ul>
+</div>
+{% endfor %}
+{% if not has %}<p class="small mute">Webで確認できる団体は見つかりませんでした（2026年11月時点）。</p>{% endif %}
+</details>
+{% endfor %}
+</section>
+<section class="sec">
+<h2 class="h2">載っていない団体・誤りを見つけたら</h2>
+<p style="margin:0 0 12px">載っていない団体、連携している団体、誤り、掲載の取り下げは、ここからまとめて知らせてください。確認してから次の版に反映します。</p>
+<a class="btn btn--pink" href="{{ url('teikyo/') }}?kind=dantai"><span>団体について知らせる</span><span class="mono">→</span></a>
+</section>
+</div>
+{% endblock %}
