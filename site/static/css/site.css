@@ -409,3 +409,27 @@ details.fold[open] > summary::after{content:"－"}
 .qhead__then p{margin:0}
 .muni__l--home{color:var(--mute);font-weight:700}
 .muni__fix{display:block;font-size:11px;color:var(--mute);text-decoration:underline;margin-top:2px;text-align:right}
+
+/* ---------- 防災団体マップ ---------- */
+.dmap{height:68vh;min-height:360px;border:2px solid var(--ink);background:var(--board);z-index:0}
+.dlegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 10px;font-size:13px;font-weight:700}
+.dlegend span{display:inline-flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid var(--ink)}
+.dot--drr{background:#E24F93}.dot--rel{background:#F2B705}.dot--none{background:#A9A9B3}
+.dnote ul{margin:6px 0 0;padding-left:1.2em}
+.dpref{border:2px solid var(--ink);margin:0 0 8px;background:#fff}
+.dpref summary{cursor:pointer;padding:10px 12px;font-weight:900}
+.dschool{padding:8px 12px;border-top:1px solid var(--line)}
+.dschool__n{font-weight:900}
+.dorgs{margin:4px 0 0;padding-left:1.2em;font-size:14px}
+.dtag{display:inline-block;font-size:11px;font-weight:900;padding:0 5px;border:1px solid var(--ink);line-height:1.6}
+.dtag--0,.dtag--1{background:var(--tint)}
+.dpop{font-family:var(--sans);font-size:13px;line-height:1.6}
+.dpop ul{margin:6px 0;padding-left:1.1em}
+.dpop__m{color:var(--mute);font-size:12px}
+.dpop__t{font-size:11px;font-weight:900;color:var(--pink-ink)}
+.dpop__fix{display:inline-block;margin-top:4px;font-size:12px;font-weight:900}
+.muni__orgs{margin:4px 0 0;font-size:13px}
+.muni__orgs summary{cursor:pointer;font-weight:900;color:var(--pink-ink)}
+.muni__orgs ul{margin:4px 0 0;padding-left:1.2em}
+.dlink{display:inline-flex;margin-top:12px}
