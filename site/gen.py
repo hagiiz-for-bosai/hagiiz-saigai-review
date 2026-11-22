@@ -24,6 +24,58 @@ import bunsho
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
+# ---------------- 防災団体マップ（収集側の公開用データ） ----------------
+ROLE_ORDER = {"主目的": 0, "活動の一部": 1, "関連": 2}
+
+
+def load_dantai(d):
+    """data/dantai/ の CSV（organizations, schools, org_school, org_municipality）を読む。無ければ None。"""
+    import csv
+    need = ["organizations.csv", "schools.csv", "org_school.csv", "org_municipality.csv"]
+    if not d or not all(os.path.exists(os.path.join(d, n)) for n in need):
+        return None
+    rd = lambda n: list(csv.DictReader(open(os.path.join(d, n), encoding="utf-8-sig")))
+    O = {o["org_id"]: o for o in rd("organizations.csv")}
+    S = {x["school_code"]: x for x in rd("schools.csv")}
+    for o in O.values():
+        o["schools"] = []
+        o["rank"] = ROLE_ORDER.get(o.get("drr_role", ""), 3)
+    for x in rd("org_school.csv"):
+        if x["org_id"] in O and x["school_code"] in S:
+            O[x["org_id"]]["schools"].append(S[x["school_code"]]["name"])
+    by_city = defaultdict(list)
+    for x in rd("org_municipality.csv"):
+        if x["org_id"] in O and O[x["org_id"]] not in by_city[x["lgcode_city"]]:
+            by_city[x["lgcode_city"]].append(O[x["org_id"]])
+    for v in by_city.values():
+        v.sort(key=lambda o: (o["rank"], o["name"]))
+    sch_orgs = defaultdict(list)
+    for x in rd("org_school.csv"):
+        if x["org_id"] in O:
+            sch_orgs[x["school_code"]].append(x["org_id"])
+    return {"orgs": O, "schools": S, "by_city": by_city, "sch_orgs": sch_orgs}
+
+
+def dantai_json(T):
+    """地図用の軽いJSON。団体は配列の番号で参照する。"""
+    ids = sorted(T["orgs"])
+    idx = {k: i for i, k in enumerate(ids)}
+    orgs = [[T["orgs"][k][c] for c in ("name", "org_type", "drr_role", "activity", "activity_state", "evidence_url", "checked_date")]
+            for k in ids]
+    schools = []
+    for s in T["schools"].values():
+        o = sorted(T["sch_orgs"].get(s["school_code"], []), key=lambda k: (T["orgs"][k]["rank"], T["orgs"][k]["name"]))
+        drr = any(T["orgs"][k]["rank"] <= 1 for k in o)
+        cls = "drr" if drr else ("rel" if o else "none")
+        try:
+            lat, lng = round(float(s["lat"]), 5), round(float(s["lng"]), 5)
+        except ValueError:
+            continue
+        schools.append([s["name"], s["pref_name"], s.get("city_name", ""), lat, lng, cls,
+                        0 if s.get("coord_precision", "").startswith("要確認") else 1, [idx[k] for k in o]])
+    return {"orgs": orgs, "schools": schools}
+
+
 # ---------------- 台帳を読む ----------------
 def load(path):
     wb = load_workbook(path, data_only=True)
@@ -300,6 +352,19 @@ def main():
     bp = a.bunsho or os.path.join(os.path.dirname(os.path.abspath(a.xlsx)), "bunsho.json")
     B = bunsho.load(bp)
     M = build(D, B, preview=a.preview)
+    T = load_dantai(os.path.join(os.path.dirname(os.path.abspath(a.xlsx)), "data", "dantai"))
+    if T:
+        for pf in M["prefs"].values():
+            for code, mu in pf["munis"].items():
+                mu["orgs"] = T["by_city"].get(code, [])
+        st = [s for s in T["schools"].values()]
+        M["dantai"] = {"n_orgs": len(T["orgs"]), "n_schools": len(st),
+                       "n_has": sum(1 for s in st if T["sch_orgs"].get(s["school_code"])),
+                       "n_none": sum(1 for s in st if not T["sch_orgs"].get(s["school_code"])),
+                       "by_pref": OrderedDict()}
+        for s in sorted(st, key=lambda s: s["school_code"]):
+            o = sorted((T["orgs"][k] for k in T["sch_orgs"].get(s["school_code"], [])), key=lambda o: (o["rank"], o["name"]))
+            M["dantai"]["by_pref"].setdefault(s["pref_name"], []).append({"s": s, "orgs": o})
     env = Environment(loader=FileSystemLoader(os.path.join(HERE, "templates")), autoescape=select_autoescape(["html", "xml"]),
                       trim_blocks=True, lstrip_blocks=True)
     out = a.out
@@ -365,6 +430,12 @@ def main():
         write(f"kagaku/{p['公開用の名前']}/index.html", "kagaku.html", title=p["現象名"], nav="saigai", p=p,
               pdis=[d for d in dis_open if p in d["phen"]])
     write("chiiki/index.html", "chiiki.html", title="地域", nav="chiiki")
+    if T:
+        os.makedirs(os.path.join(out, "static", "data"), exist_ok=True)
+        json.dump(dantai_json(T), open(os.path.join(out, "static", "data", "dantai.json"), "w", encoding="utf-8"),
+                  ensure_ascii=False, separators=(",", ":"))
+        write("chiiki/dantai/index.html", "dantai.html", title="大学の防災学生団体の地図", nav="chiiki",
+              desc="全国の大学・短大・高専1,175校と、Webで確認できた防災に関わる学生団体の地図。")
     write("about/index.html", "about.html", title="このサイトについて", nav="")
     write("teikyo/index.html", "teikyo.html", title="知らせる・提供する", nav="")
     write("404.html", "404.html", absolute=True, title="ページが見つかりません", nav="")
