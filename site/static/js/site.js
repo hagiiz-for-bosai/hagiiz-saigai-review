@@ -75,6 +75,17 @@
   }
   tick(); setInterval(tick, 1000);
 
+  // ---------- 今日の問い（日本時間で1日ごとに入れかえる） ----------
+  (function () {
+    var box = $('#hz-today'); if (!box) return;
+    var L = []; try { L = JSON.parse(box.textContent); } catch (e) {}
+    if (!L.length) return;
+    var day = Math.floor(jst().getTime() / 864e5), t = L[day % L.length];
+    $$('[data-today-link]').forEach(function (a) { a.href = t.u; });
+    $$('[data-today-q]').forEach(function (n) { n.textContent = t.q; });
+    $$('[data-today-no]').forEach(function (n) { n.textContent = t.no; });
+  })();
+
   // ---------- ボードの糸 ----------
   var board = $('[data-board]');
   var threadPaths = [];
@@ -90,7 +101,7 @@
       if (!p) {
         // 糸は最初の1回だけ引く。あとは位置だけ直す（引き直しでチカチカさせない）
         p = threadPaths[i] = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        p.setAttribute('stroke', l[2] === 'soon' ? '#9A9AA4' : '#E24F93');
+        p.setAttribute('stroke', l[2] === 'soon' ? '#9A9AA4' : '#C2306F');
         p.setAttribute('stroke-width', l[2] === 'soon' ? '1.5' : '2.5');
         if (l[2] === 'soon') p.setAttribute('stroke-dasharray', '4 4');
         else { p.setAttribute('pathLength', '100'); p.style.strokeDasharray = '100'; p.style.setProperty('--len', '100'); p.style.animation = 'hz-draw 1.2s ' + (0.2 + i * 0.06) + 's ease-out both'; }
@@ -174,7 +185,12 @@
   function fillCounts() {
     var nodes = $$('[data-count]'); if (!nodes.length) return;
     var put = function (counts) {
-      nodes.forEach(function (n) { var k = n.getAttribute('data-count'); var v = k === '*' ? counts.__total : counts[k]; n.textContent = v == null ? '0' : v; });
+      nodes.forEach(function (n) {
+        var k = n.getAttribute('data-count'); var v = k === '*' ? counts.__total : counts[k]; v = v || 0;
+        n.textContent = v;
+        // 0件の数字は出さない（「最初の答えを待っています」を出す）
+        var w = n.closest('[data-count-wrap]'); if (w) { w.hidden = !v; var e = w.parentNode && w.parentNode.querySelector('[data-count-empty]'); if (e) e.hidden = !!v; }
+      });
     };
     if (DEMO) {
       var all = localAll(), c = { __total: 0 };
@@ -184,7 +200,7 @@
     api({ action: 'counts' }).then(function (r) { var c = r.counts || {}; c.__total = r.total || 0; put(c); }).catch(function () {});
   }
   fillCounts();
-  function paintMineCount() { var m = store('hz-mine') || []; $$('[data-mine-count]').forEach(function (n) { n.textContent = m.length; }); }
+  function paintMineCount() { var m = store('hz-mine') || []; $$('[data-mine-count]').forEach(function (n) { n.textContent = m.length ? m.length : ''; }); }
   paintMineCount();
 
   // ---------- 答えを描く ----------
@@ -240,7 +256,7 @@
       while (list.firstChild) list.removeChild(list.firstChild);
       answers.forEach(function (a) { list.appendChild(renderAnswer(a, mineIds, agreed)); });
       if (empty) empty.hidden = answers.length > 0;
-      $$('[data-toi-count]').forEach(function (n) { n.textContent = answers.length; });
+      $$('[data-toi-count]').forEach(function (n) { n.textContent = answers.length; n.hidden = !answers.length; });
       var roles = {}; answers.forEach(function (a) { roles[a.role] = 1; });
       $$('[data-toi-roles]').forEach(function (n) { n.textContent = Object.keys(roles).length; });
       $$('[data-toi-picked]').forEach(function (n) { n.textContent = answers.filter(function (a) { return a.picked; }).length; });
@@ -298,7 +314,7 @@
         };
         if (DEMO) { finish('local-' + Date.now().toString(36)); return; }
         api(null, data).then(function (r) { if (r && r.ok) finish(r.id); else throw new Error((r && r.error) || 'NG'); })
-          .catch(function (e) { btn.disabled = false; btn.textContent = '答えを出す'; errBox.textContent = '送れませんでした（' + e.message + '）。時間をおいてもう一度試してください。'; errBox.hidden = false; });
+          .catch(function (e) { btn.disabled = false; btn.textContent = '答えを送る'; errBox.textContent = '送れませんでした（' + e.message + '）。時間をおいてもう一度試してください。'; errBox.hidden = false; });
       });
       if (location.hash === '#kotaeru') setTimeout(function () { var f = $('#kotaeru'); if (f) f.scrollIntoView({ block: 'start' }); }, 200);
     }
@@ -315,27 +331,27 @@
       return new Promise(function (res) {
         var W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
         var F = '"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif', M = '"IBM Plex Mono",monospace';
-        x.fillStyle = '#F6F6F8'; x.fillRect(0, 0, W, H);
-        x.strokeStyle = '#E6E6EC'; x.lineWidth = 2;
+        x.fillStyle = '#FAF9F7'; x.fillRect(0, 0, W, H);
+        x.strokeStyle = '#FAF9F7'; x.lineWidth = 2;
         for (var gx = 0; gx < W; gx += 54) { x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx, H); x.stroke(); }
         for (var gy = 0; gy < H; gy += 54) { x.beginPath(); x.moveTo(0, gy); x.lineTo(W, gy); x.stroke(); }
         var draw = function () {
           var cx = 80, cw = W - 160, y = 170;
-          x.fillStyle = '#fff'; x.strokeStyle = '#0E0E10'; x.lineWidth = 8;
-          x.fillStyle = '#E24F93'; x.fillRect(cx + 20, 120 + 20, cw, 1580); x.fillStyle = '#fff'; x.fillRect(cx, 120, cw, 1580); x.strokeRect(cx, 120, cw, 1580);
-          x.fillStyle = '#4D4D57'; x.font = '700 30px ' + M; x.fillText('HagiiZ 災害レビュー', cx + 50, y + 40);
-          x.fillStyle = '#0E0E10'; x.font = '900 40px ' + F; x.fillText(info.lead, cx + 50, y + 120);
+          x.fillStyle = '#fff'; x.strokeStyle = '#1C1C21'; x.lineWidth = 8;
+          x.fillStyle = '#C2306F'; x.fillRect(cx + 20, 120 + 20, cw, 1580); x.fillStyle = '#fff'; x.fillRect(cx, 120, cw, 1580); x.strokeRect(cx, 120, cw, 1580);
+          x.fillStyle = '#5A5A64'; x.font = '700 30px ' + M; x.fillText('HagiiZ 災害レビュー', cx + 50, y + 40);
+          x.fillStyle = '#1C1C21'; x.font = '900 40px ' + F; x.fillText(info.lead, cx + 50, y + 120);
           x.font = '900 52px ' + F; var ql = wrapText(x, info.question, cw - 140);
-          var qh = ql.length * 76 + 50; x.fillStyle = '#0E0E10'; x.fillRect(cx + 50, y + 170, cw - 100, qh);
+          var qh = ql.length * 76 + 50; x.fillStyle = '#1C1C21'; x.fillRect(cx + 50, y + 170, cw - 100, qh);
           x.fillStyle = '#fff'; ql.forEach(function (l, i) { x.fillText(l, cx + 80, y + 240 + i * 76); });
-          var ay = y + 170 + qh + 90; x.fillStyle = '#0E0E10'; x.font = '900 36px ' + F; x.fillText('私の答え', cx + 50, ay);
+          var ay = y + 170 + qh + 90; x.fillStyle = '#1C1C21'; x.font = '900 36px ' + F; x.fillText('私の答え', cx + 50, ay);
           x.font = '900 58px ' + F; var al = wrapText(x, info.answer, cw - 100).slice(0, 6);
           al.forEach(function (l, i) { x.fillText(l, cx + 50, ay + 90 + i * 84); });
-          var by = ay + 90 + al.length * 84 + 40; x.font = '700 34px ' + F; x.fillStyle = '#4D4D57';
+          var by = ay + 90 + al.length * 84 + 40; x.font = '700 34px ' + F; x.fillStyle = '#5A5A64';
           x.fillText('根拠 ' + info.cards + '枚・' + info.name, cx + 50, by);
-          x.save(); x.translate(cx + cw - 230, 120 + 1580 - 150); x.rotate(-0.12); x.strokeStyle = '#E24F93'; x.lineWidth = 8; x.strokeRect(-20, -70, 300, 110); x.fillStyle = '#E24F93'; x.font = '900 60px ' + F; x.fillText('回答ずみ', 0, 10); x.restore();
-          x.fillStyle = '#0E0E10'; x.font = '900 40px ' + F; x.fillText('あなたなら、どう答える？', 80, 1800);
-          x.font = '700 30px ' + M; x.fillStyle = '#4D4D57'; x.fillText(info.url.replace(/^https?:\/\//, '').replace(/index\.html/, '').replace(/#.*$/, '').slice(0, 56), 80, 1860);
+          x.save(); x.translate(cx + cw - 230, 120 + 1580 - 150); x.rotate(-0.12); x.strokeStyle = '#C2306F'; x.lineWidth = 8; x.strokeRect(-20, -70, 300, 110); x.fillStyle = '#C2306F'; x.font = '900 60px ' + F; x.fillText('回答ずみ', 0, 10); x.restore();
+          x.fillStyle = '#1C1C21'; x.font = '900 40px ' + F; x.fillText('あなたなら、どう答える？', 80, 1800);
+          x.font = '700 30px ' + M; x.fillStyle = '#5A5A64'; x.fillText(info.url.replace(/^https?:\/\//, '').replace(/index\.html/, '').replace(/#.*$/, '').slice(0, 56), 80, 1860);
           c.toBlob(function (b) { res({ blob: b, url: c.toDataURL('image/png') }); }, 'image/png');
         };
         var im = new Image(); im.onload = function () { x.globalAlpha = 0.25; x.drawImage(im, W - 620, -60, 640, 855); x.globalAlpha = 1; draw(); }; im.onerror = draw; im.src = info.img || '';
@@ -359,7 +375,7 @@
         try { url = new URL(wrap.getAttribute('data-url') || '', location.href).href; } catch (e) {}
         var text = wrap.getAttribute('data-text') || document.title;
         var last = window.HZ_LAST;
-        if (last) text = (wrap.getAttribute('data-lead') || '過去の災害を根拠に、未来の問いに答えた') + '。「' + last.answer + '」 あなたならどう答える？';
+        if (last) text = (wrap.getAttribute('data-lead') || '過去の災害を教訓に、未来に託された問いに答えた') + '。「' + last.answer + '」 あなたならどう答える？';
         var open = function (u) { var a = document.createElement('a'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); };
         if (app === 'x') return open('https://x.com/intent/post?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url));
         if (app === 'line') return open('https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(url));
@@ -369,7 +385,7 @@
           return;
         }
         // Instagram・TikTok：画像を作って、共有メニューか保存
-        var info = { lead: wrap.getAttribute('data-lead') || '過去の災害を根拠に、未来の問いに答えた', question: wrap.getAttribute('data-question') || document.title, answer: last ? last.answer : (wrap.getAttribute('data-answer') || ''), cards: last ? last.cards.length : 0, name: last ? (last.name + '・' + last.role) : '', url: url, img: wrap.getAttribute('data-img') };
+        var info = { lead: wrap.getAttribute('data-lead') || '過去の災害を教訓に、未来に託された問いに答えた', question: wrap.getAttribute('data-question') || document.title, answer: last ? last.answer : (wrap.getAttribute('data-answer') || ''), cards: last ? last.cards.length : 0, name: last ? (last.name + '・' + last.role) : '', url: url, img: wrap.getAttribute('data-img') };
         btn.disabled = true;
         makeImage(info).then(function (r) {
           btn.disabled = false;
@@ -391,7 +407,11 @@
     $$('[data-me-toi]', meBox).forEach(function (a) { if (bySlug[a.getAttribute('data-me-toi')]) a.classList.add('on'); });
     $$('[data-me-n]').forEach(function (n) { n.textContent = Object.keys(bySlug).length; });
     $$('[data-me-cards]').forEach(function (n) { var s = {}; mine.forEach(function (a) { (a.cards || []).forEach(function (c) { s[c] = 1; }); }); n.textContent = Object.keys(s).length; });
-    var name = store('hz-name'); if (name) { $$('[data-me-name]').forEach(function (n) { n.textContent = name.name; }); $$('[data-me-role]').forEach(function (n) { n.textContent = name.role; }); $$('[data-me-init]').forEach(function (n) { n.textContent = name.name.slice(0, 1); }); }
+    var name = store('hz-name'); if (name) { $$('[data-me-name]').forEach(function (n) { n.textContent = name.name; }); $$('[data-me-role]').forEach(function (n) { n.textContent = name.role; }); $$('[data-me-init]').forEach(function (n) { n.textContent = name.name.slice(0, 1); }); $$('[data-me-who]').forEach(function (n) { n.hidden = false; }); }
+    // 答えていないときは0の数字を出さず、「答える」だけを出す
+    $$('[data-me-none]').forEach(function (n) { n.hidden = mine.length > 0; });
+    $$('[data-me-some]').forEach(function (n) { n.hidden = !mine.length; });
+    $$('[data-me-bar]').forEach(function (b) { var mx = +b.getAttribute('data-max') || 1, v = Object.keys(bySlug).length; b.setAttribute('aria-valuenow', v); var i = b.querySelector('i'); if (i) i.style.width = Math.round(v / mx * 100) + '%'; });
     var listBox = $('[data-me-list]'), titles = {};
     $$('[data-me-toi]', meBox).forEach(function (a) { titles[a.getAttribute('data-me-toi')] = { q: a.getAttribute('title'), href: a.getAttribute('href') }; });
     if (listBox && mine.length) {
@@ -401,7 +421,7 @@
         var card = el('a', 'qrow'); card.href = t.href;
         card.appendChild(el('span', 'qrow__h', t.q));
         card.appendChild(el('span', 'qrow__q', a.answer));
-        card.appendChild(el('span', 'small mute', '根拠 ' + (a.cards || []).length + '枚・' + new Date(a.ts).toLocaleDateString('ja-JP')));
+        card.appendChild(el('span', 'qrow__foot', '根拠 ' + (a.cards || []).length + '枚・' + new Date(a.ts).toLocaleDateString('ja-JP')));
         card.setAttribute('data-id', a.id); listBox.appendChild(card);
       });
     }
