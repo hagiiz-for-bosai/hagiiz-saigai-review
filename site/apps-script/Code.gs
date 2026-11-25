@@ -19,7 +19,8 @@ var SHEET_LOG = '記録';
 var ANSWER_COLS = ['ID', '日時', '問い', '名前', '立場', '立ち位置', '答え', '提案', '根拠カード', '納得', '通報', '表示', '採用', '端末', 'メモ'];
 var INBOX_COLS = ['日時', '種類', '内容', '参考', '地域', '名前', '連絡先', '端末', '対応'];
 var LOG_COLS = ['日時', '種類', '答えID', '端末'];
-var ROLES = ['高校生', '大学生', '防災士', '防災士をめざす', '防災団体', '研究・仕事', '自治体の職員', 'そのほか'];
+// 2026-11-25 立場の選択肢を新しくした（学生／住民／自治体の職員／防災の活動をしている／そのほか）。前の答えも読めるよう、前の選択肢も残す
+var ROLES = ['学生', '住民', '自治体の職員', '防災の活動をしている', 'そのほか', '高校生', '大学生', '防災士', '防災士をめざす', '防災団体', '研究・仕事'];
 var STANCES = ['', 'もう答えが出た', '一部だけ', 'まだ', 'わからない'];
 var KINDS = ['資料の提供', '問いの提案', '防災団体の掲載申請', 'リンク切れ', '扱ってほしい災害', 'そのほか'];
 
@@ -121,7 +122,7 @@ function doPost(e) {
 function postAnswer(d, client) {
   if (!rateOk('a:' + client, 5, 600) || !rateOk('a:all', 300, 3600)) return { ok: false, error: '少し時間をおいてください' };
   var toi = String(d.toi || ''), cards = (d.cards || []).map(String).filter(function (c) { return /^E\d{2,3}$/.test(c); }).slice(0, 2);
-  var answer = clean(d.answer, 80), proposal = clean(d.proposal, 80), name = clean(d.name, 20), role = String(d.role || ''), stance = String(d.stance || '');
+  var answer = clean(d.answer, 120), proposal = clean(d.proposal, 80), name = clean(d.name, 20), role = String(d.role || ''), stance = String(d.stance || '');
   if (!/^[a-z0-9-]{1,80}$/.test(toi)) return { ok: false, error: '問いが正しくありません' };
   if (!cards.length) return { ok: false, error: '根拠カードを選んでください' };
   if (!answer || !name) return { ok: false, error: '答えと名前を書いてください' };
