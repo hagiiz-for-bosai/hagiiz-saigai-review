@@ -1,11 +1,11 @@
 {# 共通の部品 #}
 
 {% macro urgency(d) %}
-<section class="urgency" aria-label="時間">
-<div class="urgency__in" data-since="{{ d.発生年月日 }}">
-<div class="urgency__row"><span class="urgency__k">{{ d.name }}から</span>
-<span class="urgency__clock"><span class="big flick" data-y>–</span><span class="u">年</span> <span data-d>–</span><span class="u">日</span> <span data-t>--:--:--</span></span></div>
-{% if d.year|int <= 1980 %}<span class="urgency__w">当時小学生だった人は、いま <span class="mono" data-witness>–</span> 歳以上。直接話を聞ける時間は限られている。</span>{% endif %}
+<section class="urg" aria-label="時間">
+<div class="urg__in" data-since="{{ d.発生年月日 }}">
+<p>{{ d.name }}から <b data-y>{{ (today[:4]|int) - (d.year|int) }}</b> 年</p>
+{% if d.year|int <= 1980 %}<p>当時小学生だった人は、いま <b data-witness>–</b> 歳以上</p>
+<p class="urg__w">直接話を聞ける時間は、限られています。</p>{% endif %}
 </div>
 </section>
 {% endmacro %}
@@ -13,24 +13,24 @@
 {% macro dcard(d, url, asset, i) %}
 <a class="dcard{% if d.open %} dcard--open{% else %} dcard--soon{% endif %}" href="{% if d.open %}{{ url('saigai/' ~ d.公開用の名前 ~ '/') }}{% else %}#{{ d.公開用の名前 }}{% endif %}" id="{{ d.公開用の名前 }}" style="animation-delay:{{ i * 0.07 }}s" data-tags="{{ d.種類 }}"{% if not d.open %} aria-disabled="true"{% endif %}>
 <span class="dcard__img"><img src="{{ asset('img/' ~ d.img ~ '.jpg') }}" alt="{{ d.種類 }}を表す図（画像生成）" loading="lazy" width="596" height="796"><span class="dcard__no">FILE {{ '%02d' % i }}</span><span class="dcard__year">{{ d.year }}</span></span>
-<span class="dcard__body"><span class="dcard__name">{{ d.name }}</span><span class="dcard__type">{{ d.種類 }}</span><span class="dcard__cta">{% if d.open %}公開中・ひらく →{% else %}準備中{% endif %}</span></span>
+<span class="dcard__body"><span class="dcard__name">{{ d.name }}</span><span class="dcard__type">{{ d.種類 }}</span><span class="dcard__cta">{% if d.open %}<span class="label">公開中</span> ひらく →{% else %}準備中{% endif %}</span></span>
 </a>
 {% endmacro %}
 
 {% macro qrow(t, url) %}
 <a class="qrow" href="{{ url('toi/' ~ t.slug ~ '/') }}" data-tags="{{ t.kind }},{{ t.tags|join(',') }}">
-<span class="qrow__top"><span class="label {% if t.kind == '国会' %}label--ink{% else %}label--pink{% endif %}">{{ '国会の問い' if t.kind == '国会' else '教訓' }} {{ t.kno }}</span><span>答え <span class="mono" data-count="{{ t.slug }}">–</span></span></span>
-<span class="qrow__h">{{ t.h }}</span>
+<span class="qrow__top"><span>未来への問い {{ t.no }} ・ {{ t.h }}</span><span class="label">{{ '国会の議論から' if t.kind == '国会' else '災害の教訓から' }}</span></span>
 <span class="qrow__q">{{ t.q }}</span>
-<span class="qrow__foot"><span class="mute">{{ t.d.name if t.d else '' }}</span><b>答える →</b></span>
+<span class="qrow__foot"><span data-count-wrap hidden>答え <span class="mono" data-count="{{ t.slug }}"></span></span><span data-count-empty>最初の答えを待っています</span><b>答える →</b></span>
 </a>
 {% endmacro %}
 
 {% macro srcrow(s) %}
-<div class="src" data-tags="{{ s.種類 }}" data-text="{{ s.タイトル }} {{ s['作成者・発行者'] }} {{ s['1行の説明'] }}">
+<div class="src" data-tags="{{ s.種類 }},{{ s.一次か二次か }}資料" data-text="{{ s.タイトル }} {{ s['作成者・発行者'] }} {{ s['1行の説明'] }}">
+<span class="src__o src__o--{{ '1' if s.一次か二次か == '一次' else '2' }}">{{ s.一次か二次か }}資料</span>
 {% if s.URL %}<a class="src__t" href="{{ s.URL }}" target="_blank" rel="noopener">{{ s.タイトル }}</a>{% else %}<span class="src__t">{{ s.タイトル }}</span>{% endif %}
-<span class="src__m">{{ s['作成者・発行者'] }}{% if s.発行年 %}・{{ s.発行年 }}{% endif %}・{{ s.種類 }}・{{ s.一次か二次か }}資料{% if not s.URL and s['所蔵・入手先'] %}・所蔵：{{ s['所蔵・入手先'] }}{% endif %}</span>
 {% if s['1行の説明'] %}<span class="src__d">{{ s['1行の説明'] }}</span>{% endif %}
+<span class="src__m">{{ s['作成者・発行者'] }}{% if s.発行年 %}・{{ s.発行年 }}{% endif %}・{{ s.種類 }}{% if not s.URL and s['所蔵・入手先'] %}・所蔵：{{ s['所蔵・入手先'] }}{% endif %}</span>
 </div>
 {% endmacro %}
 
@@ -49,8 +49,9 @@
 
 {% macro entry(href, title, desc, n, art, d) %}
 <a class="ecard" href="{{ href }}">
-<span class="ecard__art art--{{ art }}"><svg viewBox="0 0 100 80" aria-hidden="true"><path d="{{ d }}"></path></svg><span class="ecard__n">{{ n }}</span></span>
-<span class="ecard__body"><span class="ecard__t">{{ title }}</span><span class="ecard__d">{{ desc }}</span></span>
+<span class="ecard__top"><span class="ecard__t">{{ title }}</span>{% if n and n != '▶' %}<span class="ecard__n">{{ n }}</span>{% endif %}</span>
+<span class="ecard__d">{{ desc }}</span>
+<span aria-hidden="true" style="text-align:right">→</span>
 </a>
 {% endmacro %}
 

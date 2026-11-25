@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block main %}
-<section class="qhead gridbg">
+<section class="qhead">
 <div class="wrap">
-<a class="crumb" href="{{ url('') }}"><span class="mono">←</span>全体図</a>
-<h1 class="h1">知らせる・<span class="mark">提供する</span></h1>
+<a class="crumb" href="{{ url('') }}">← 全体図</a>
+<h1 class="h1">知らせる・提供する</h1>
 <p class="qhead__then">資料の提供、新しい問いの提案、防災団体（載っていない団体・誤り・掲載の取り下げ）、リンク切れの報告を、ここでまとめて受け付けます。</p>
 </div>
 </section>
@@ -26,7 +26,7 @@
 <label class="field"><span class="field__l">表示する名前（任意）</span><input class="input" name="name" maxlength="30"></label>
 <label class="field"><span class="field__l">連絡先（任意・公開しません。団体の申請では必要です）</span><input class="input" name="contact" maxlength="120" autocomplete="email"></label>
 <p class="err" data-err hidden role="alert"></p>
-<button class="btn btn--pink btn--big btn--center" type="submit">送る</button>
+<button class="btn btn--pink btn--big btn--center" type="submit"><span>送る</span><span aria-hidden="true">→</span></button>
 <p class="small mute" style="margin:0">いただいた内容は運営が確認してから使います。掲載まで時間がかかることがあります。</p>
 </form>
 <div class="note" data-teikyo-done hidden><b style="font-size:18px">受け取りました。</b><br>運営が確認します。ありがとうございました。</div>

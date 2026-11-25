@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block main %}
 <div class="wrap">
-<a class="crumb" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/') }}"><span class="mono">←</span>{{ d.name }}</a>
+<a class="crumb" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/') }}">← {{ d.name }}</a>
 <section class="sec" style="padding-top:8px">
-<h1 class="h1">被災した地域は、<br><span class="mark">いま</span></h1>
+<h1 class="h1">被災した地域は、いま</h1>
 <p class="lead">{{ d.name }}で被災した当時の町が、いまどの市町村にあたるか。その市町村の地域防災計画（災害のとき、町がどう動くかを書いた計画）へ進めます。</p>
 </section>
 <section class="sec">
 <h2 class="h2">当時の町 → いまの市町村 {{ d.munis|length }}</h2>
-<div style="border:2px solid var(--ink)">
+<div style="border-top:2px solid var(--ink)">
 {% for mu in d.munis %}
 <div class="muni">
-<div style="display:flex;flex-direction:column"><span class="muni__n">{{ mu.今の自治体名 }}</span><span class="muni__s">当時：{{ mu.当時の名称 }}</span></div>
-{% if mu.url %}<a class="muni__l{% if mu.kind == 'home' %} muni__l--home{% endif %}" href="{{ mu.url }}" target="_blank" rel="noopener">{{ {'page':'計画をひらく →','pdf':'計画（PDF）→','page_u':'計画をひらく（未確認）→','pdf_u':'計画（PDF・未確認）→','home':'公式サイトでさがす →'}[mu.kind] }}</a>{% if mu.kind.endswith('_u') %}<a class="muni__fix" href="{{ url('teikyo/') }}?kind=link">ちがったら知らせる</a>{% endif %}{% else %}<span class="muni__l muni__l--none">リンク準備中</span>{% endif %}
+<div style="display:flex;flex-direction:column"><span class="muni__n">{{ mu.今の自治体名 }}</span><span class="muni__s">当時：{{ mu.当時の名称 }}</span>{% if mu.kind and mu.kind.endswith('_u') %}<span class="small" style="align-self:flex-start;border:1px dashed var(--gray);border-radius:4px;padding:0 8px;color:var(--text2);margin-top:4px">未確認</span>{% endif %}</div>
+{% if mu.url %}<a class="muni__l{% if mu.kind == 'home' %} muni__l--home{% endif %}" href="{{ mu.url }}" target="_blank" rel="noopener">{{ {'page':'計画をひらく →','pdf':'計画をひらく（PDF）→','page_u':'計画をひらく →','pdf_u':'計画をひらく（PDF）→','home':'公式サイトでさがす →'}[mu.kind] }}</a>{% if mu.kind.endswith('_u') %}<a class="muni__fix" href="{{ url('teikyo/') }}?kind=link">ちがったら知らせる</a>{% endif %}{% else %}<span class="muni__l muni__l--none">リンク準備中</span>{% endif %}
 </div>
 {% endfor %}
 </div>

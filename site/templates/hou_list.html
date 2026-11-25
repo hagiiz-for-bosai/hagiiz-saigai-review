@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block main %}
 <div class="wrap">
-<a class="crumb" href="{{ url('') }}"><span class="mono">←</span>全体図</a>
+<a class="crumb" href="{{ url('') }}">← 全体図</a>
 <section class="sec" style="padding-top:8px">
-<h1 class="h1">災害から生まれた<br><span class="mark">法律</span></h1>
+<h1 class="h1">災害から生まれた法律</h1>
 <p class="lead">法律と、そのきっかけになった災害を、1つずつ見直します。</p>
 </section>
 <section class="sec" style="display:flex;flex-direction:column;gap:14px">
 {% for l in M.laws %}
 {% if l.open %}
-<a class="law" href="{{ url('hou/' ~ l.公開用の名前 ~ '/') }}" style="--r:0deg;margin:0;padding:16px 14px">
+<a class="law" href="{{ url('hou/' ~ l.公開用の名前 ~ '/') }}" >
 <span class="law__meta">LAW / {{ l.制定年 }}{% for d in l.disasters %} ← {{ d.name }}（{{ d.year }}）{% endfor %}</span>
 <span class="law__name" style="font-size:22px">{{ l.法律名 }}</span>
-<span class="small">公開中・ひらく →</span>
+<span class="small" style="font-weight:700"><span class="label">公開中</span> ひらく →</span>
 </a>
 {% else %}
 <div class="soon" style="padding:12px 14px;flex-direction:column;align-items:flex-start">

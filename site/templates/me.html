@@ -1,34 +1,44 @@
 {% extends "base.html" %}
 {% block main %}
 <div data-me>
-<section class="qhead gridbg">
+<section class="qhead">
 <div class="wrap">
-<a class="crumb" href="{{ url('') }}"><span class="mono">←</span>全体図</a>
-<div style="display:flex;gap:12px;align-items:center">
-<span class="ans__av" style="width:64px;height:64px;font-size:24px;background:var(--pink)" data-me-init>？</span>
-<div style="display:flex;flex-direction:column"><span class="h1 glitch" style="font-size:26px" data-me-name>わたしの答え</span><span class="small mute" data-me-role>まだ答えていません</span></div>
-</div>
-<div class="stats" style="margin-top:16px">
-<div class="stat stat--ink"><span class="stat__k">答えた問い</span><span class="stat__v" data-me-n>0</span></div>
-<div class="stat"><span class="stat__k">使った根拠</span><span class="stat__v" data-me-cards>0</span></div>
-<div class="stat stat--pink"><span class="stat__k">防災士が採用</span><span class="stat__v" data-me-picked>0</span></div>
-</div>
-<p class="small mute" style="margin:10px 0 0">登録はいりません。この端末で出した答えが、ここにまとまります。</p>
+<a class="crumb" href="{{ url('') }}">← 全体図</a>
+<h1 class="h1">わたしの答え</h1>
+<p class="qhead__then" style="margin-top:8px">登録はいりません。この端末で出した答えが、ここにまとまります。<span data-me-who hidden>（<span data-me-name></span>・<span data-me-role></span>）</span></p>
 </div>
 </section>
 <div class="wrap">
-<section class="sec">
-<h2 class="h2">未来への問い {{ M.qs|length }}</h2>
-<div class="mygrid">
-{% for t in M.qs %}<a href="{{ url('toi/' ~ t.slug ~ '/') }}" data-me-toi="{{ t.slug }}" title="{{ t.q }}" aria-label="問い{{ t.no }}：{{ t.q }}">{{ t.no }}</a>{% endfor %}
+<section class="sec" data-me-none>
+<div class="panel" style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between">
+<div style="flex:1 1 360px"><h2 class="h2" style="margin:0">まだ答えていません</h2><p style="margin:8px 0 0;color:var(--text2)">最初の1問は5分ほど。根拠カードを選んで、1文で答えます。</p></div>
+<a class="btn btn--pink btn--big" href="{{ url('toi/') }}"><span>問いを選んで答える</span><span aria-hidden="true">→</span></a>
 </div>
-<p class="small mute">ピンクは答えた問い。黒は防災士が採用した答え。</p>
+</section>
+<section class="sec" data-me-some hidden>
+<div class="panel">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:12px">
+<p style="margin:0;font-size:17px">{{ M.qs|length }}問のうち <b class="mono" style="font-size:32px;font-weight:600" data-me-n>0</b> 問に答えました</p>
+<p style="margin:0;color:var(--text2)">使った根拠カード <b class="mono" data-me-cards>0</b>　防災士が採用 <b class="mono" data-me-picked>0</b></p>
+</div>
+<div class="progress" role="progressbar" aria-label="答えた問いの数" aria-valuemin="0" aria-valuemax="{{ M.qs|length }}" data-me-bar data-max="{{ M.qs|length }}"><i></i></div>
+</div>
+</section>
+<section class="sec">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px">
+<h2 class="h2" style="margin:0">未来への問い {{ M.qs|length }}</h2>
+<p class="legend" style="margin:0"><span><i></i>まだ</span><span><i class="k"></i>答えた ✓</span><span>★ 防災士が採用</span></p>
+</div>
+<div class="mygrid">
+{% for t in M.qs %}<a href="{{ url('toi/' ~ t.slug ~ '/') }}" data-me-toi="{{ t.slug }}" title="{{ t.q }}" aria-label="問い{{ t.no }}：{{ t.q }}"><span class="mono">{{ t.no }}</span><span>{{ t.h }}</span></a>{% endfor %}
+</div>
 </section>
 <section class="sec">
 <h2 class="h2">出した答え</h2>
 <div class="qlist" data-me-list></div>
-<div class="note" data-me-empty>まだ答えていません。最初の1問を選んでみましょう。</div>
-<a class="btn btn--pink btn--big" href="{{ url('toi/') }}" style="margin-top:16px"><span>まだ答えていない問いに答える</span><span class="mono">→</span></a>
+<div class="note" data-me-empty>まだありません。答えると、ここに問いと自分の1文、使った根拠カードの数が並びます。</div>
+<a href="{{ url('toi/') }}" style="display:inline-flex;align-items:center;min-height:44px;margin-top:12px;color:var(--ink);font-weight:700">まだ答えていない問いを見る →</a>
+<p class="small mute" style="margin:16px 0 0">答えはこの端末のブラウザに覚えています。別の端末や、閲覧の記録を消したあとは表示されません。</p>
 </section>
 </div>
 </div>

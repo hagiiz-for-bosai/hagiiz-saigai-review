@@ -1,12 +1,21 @@
 {% extends "base.html" %}
-{% import "_m.html" as m %}
+{% import "_m.html" as m with context %}
 {% block main %}
-<section class="qhead gridbg">
+<section class="qhead" style="padding-bottom:0">
 <div class="wrap">
-<a class="crumb" href="{{ url('hou/') }}"><span class="mono">←</span>法律</a>
-<span class="label label--ink mono">LAW / {{ l.制定年 }}</span>
-<h1 class="h1 glitch" style="margin-top:8px">{{ l.法律名 }}</h1>
-<p class="qhead__then">{% for d in l.disasters %}<a href="{{ url('saigai/' ~ d.公開用の名前 ~ '/') }}">{{ d.name }}</a>（{{ d.year }}年）{% endfor %}をきっかけにできた法律。{% if l.公布日 %}{{ l.公布日|replace('-', '.') }} 公布{% endif %}{% if l.施行日 %}、{{ l.施行日|replace('-', '.') }} 施行{% endif %}。</p>
+<a class="crumb" href="{{ url('') }}">← 全体図</a>
+<p class="mono small mute" style="margin:8px 0 0">LAW ・ {{ l.制定年 }}</p>
+<h1 class="h1" style="font-size:48px;margin-top:4px">{{ l.法律名 }}</h1>
+<p class="qhead__then">{% for d in l.disasters %}<a href="{{ url('saigai/' ~ d.公開用の名前 ~ '/') }}" style="color:var(--ink)">{{ d.name }}（{{ d.year }}年）</a>{% endfor %}をきっかけにできた法律。</p>
+<dl class="facts">
+{% if l.公布日 %}<div><dt>公布</dt><dd>{{ l.公布日|replace('-', '.') }}</dd></div>{% endif %}
+{% if l.施行日 %}<div><dt>施行</dt><dd>{{ l.施行日|replace('-', '.') }}</dd></div>{% endif %}
+<div><dt>国会での話し合い</dt><dd>{{ l.timeline|length }}回</dd></div>
+<div><dt>その後の改正</dt><dd>{{ l.amends|length }}回</dd></div>
+</dl>
+<nav class="intab" aria-label="このページの中">
+<a href="#video">解説</a>{% if l.qs %}<a href="#toi">国会から生まれた問い {{ l.qs|length }}</a>{% endif %}<a href="#kokkai">国会での話し合い {{ l.timeline|length }}</a><a href="#kaisei">改正 {{ l.amends|length }}</a>{% if l.sources %}<a href="#shiryo">資料 {{ l.sources|length }}</a>{% endif %}
+</nav>
 </div>
 </section>
 <div class="wrap">
@@ -19,7 +28,7 @@
 </div>
 {% if l.lessons %}
 <div style="margin-top:12px;display:flex;flex-direction:column;gap:0">
-{% for r in l.lessons %}<a class="linkrow" href="{{ url('manabu/') }}#{{ r.レッスンID }}"><span><span class="mono" style="color:var(--pink-ink)">L{{ '%02d' % (r.番号|int) }}</span> {{ r.見出し }}</span><span class="mono">{{ r.動画のチャプター開始 or '→' }}</span></a>{% endfor %}
+{% for r in l.lessons %}<a class="linkrow" href="{{ url('manabu/') }}#{{ r.レッスンID }}"><span><span class="mono mute" style="margin-right:10px">L{{ '%02d' % (r.番号|int) }}</span>{{ r.見出し }}</span><span class="mono">{{ r.動画のチャプター開始 or '→' }}</span></a>{% endfor %}
 </div>
 {% endif %}
 </section>
@@ -27,7 +36,7 @@
 {{ m.docsec(l.doc, ['何を決めた法律か', 'できたきっかけ', '変わってきたこと'], 'この法律のこと') }}
 {% if l.note %}<div style="padding-top:12px">{{ m.note(l.note) }}</div>{% endif %}
 {% if l.qs %}
-<section class="sec">
+<section class="sec" id="toi">
 <h2 class="h2">この法律をつくった国会から生まれた問い</h2>
 <div class="qlist">{% for t in l.qs %}{{ m.qrow(t, url) }}{% endfor %}</div>
 </section>
@@ -36,12 +45,12 @@
 <section class="sec" id="kokkai">
 <span class="label label--line">確定した事実</span>
 <h2 class="h2" style="margin-top:8px">国会での話し合い {{ l.timeline|length }}回</h2>
-<p class="small mute" style="margin-top:0">国会会議録検索システムの記録へのリンクです。ピンクの印は、採決や附帯決議があった回です。</p>
+<p class="small mute" style="margin-top:0">国会会議録検索システムの記録へのリンクです。◆は、採決や附帯決議があった回です。</p>
 <ol class="tl">
 {% for s in l.timeline[:8] %}<li{% if s.hi %} class="hi"{% endif %}><span class="tl__d">{{ s['日付（会議日など）']|replace('-', '.') }}</span><br>{% if s.URL %}<a class="tl__t" href="{{ s.URL }}" target="_blank" rel="noopener">{{ s.タイトル }}</a>{% else %}<span class="tl__t">{{ s.タイトル }}</span>{% endif %}<br><span class="tl__s">{{ s['1行の説明'] }}</span></li>{% endfor %}
 </ol>
 {% if l.timeline|length > 8 %}
-<details class="fold more"><summary>残りの{{ l.timeline|length - 8 }}回を見る</summary>
+<details class="fold more"><summary>残りの{{ l.timeline|length - 8 }}回を見る ＋</summary>
 <ol class="tl" style="margin-top:12px">
 {% for s in l.timeline[8:] %}<li{% if s.hi %} class="hi"{% endif %}><span class="tl__d">{{ s['日付（会議日など）']|replace('-', '.') }}</span><br>{% if s.URL %}<a class="tl__t" href="{{ s.URL }}" target="_blank" rel="noopener">{{ s.タイトル }}</a>{% else %}<span class="tl__t">{{ s.タイトル }}</span>{% endif %}<br><span class="tl__s">{{ s['1行の説明'] }}</span></li>{% endfor %}
 </ol>
@@ -49,7 +58,7 @@
 {% endif %}
 </section>
 
-<section class="sec">
+<section class="sec" id="kaisei">
 <span class="label label--line">確定した事実</span>
 <h2 class="h2" style="margin-top:8px">その後の改正 {{ l.amends|length }}回</h2>
 <ol class="tl">
@@ -58,7 +67,7 @@
 </section>
 
 {% if l.sources %}
-<section class="sec">
+<section class="sec" id="shiryo">
 <h2 class="h2">資料</h2>
 {% for s in l.sources %}{{ m.srcrow(s) }}{% endfor %}
 </section>

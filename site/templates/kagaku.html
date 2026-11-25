@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block main %}
-<section class="qhead gridbg">
+<section class="qhead">
 <div class="wrap">
-<a class="crumb" href="{{ url('') }}"><span class="mono">←</span>全体図</a>
+<a class="crumb" href="{{ url('') }}">← 全体図</a>
 <span class="label label--line">現象</span>
-<h1 class="h1 glitch" style="margin-top:8px">{{ p.現象名 }}</h1>
+<h1 class="h1" style="margin-top:8px">{{ p.現象名 }}</h1>
 {% set how = (p['仕組みの説明（短く）'] or '')|replace('（下書き）', '') %}
 {% if how %}<p class="qhead__then">{{ how }}</p>{% endif %}
 </div>

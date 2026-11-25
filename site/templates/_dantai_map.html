@@ -1,0 +1,34 @@
+{# 大学の防災学生団体の地図（地域ページと地図のページで共通） #}
+{% set T = M.dantai %}
+<div class="mapcard" data-dmap-wrap data-src="{{ asset('data/dantai.json') }}" data-fix="{{ url('teikyo/') }}?kind=dantai">
+<div class="mapcard__bar">
+<p class="mapcard__sum">全国 <span class="mono">{{ "{:,}".format(T.n_schools) }}</span> 校のうち <b>{{ "{:,}".format(T.n_has) }}</b> 校に、防災に関わる学生団体</p>
+<div class="dlegend" role="group" aria-label="地図に表示する学校">
+<button type="button" data-layer="drr" aria-pressed="true"><i class="dot dot--drr"></i>防災が主目的・活動の一部</button>
+<button type="button" data-layer="rel" aria-pressed="true"><i class="dot dot--rel"></i>関連の団体のみ</button>
+<button type="button" data-layer="none" aria-pressed="true"><i class="dot dot--none"></i>団体なし</button>
+</div>
+</div>
+<div class="mapcard__body">
+<div class="mapcard__map">
+<div class="dmap" data-dmap role="region" aria-label="大学の防災学生団体の地図"></div>
+<div class="mapcard__tools">
+<label class="sr" for="pref-jump">都道府県へ移動</label>
+<select id="pref-jump" data-pref-select><option value="">都道府県へ移動</option></select>
+<button type="button" data-reset hidden>← 全国</button>
+<span class="mapcard__hint">点を押すと、その学校の団体</span>
+</div>
+</div>
+<aside class="mapcard__side" aria-label="学校と団体の一覧">
+<div class="mapcard__head">
+<span class="mapcard__k" data-side-k>全国</span>
+<p class="mapcard__t" data-side-t>都道府県を選ぶ</p>
+<p class="mapcard__s" data-side-s></p>
+<label class="sr" for="school-q">学校名・町の名前でさがす</label>
+<input id="school-q" class="input" type="search" placeholder="学校名・町の名前でさがす" data-school-search style="margin-top:10px;min-height:44px">
+</div>
+<div class="mapcard__list" data-side-list aria-live="polite"></div>
+</aside>
+</div>
+</div>
+<p class="mapnote">Webで確認できた団体だけを載せています（{{ "{:,}".format(T.n_orgs) }}団体、2026年11月時点）。「団体なし」は確認できなかったという意味で、団体がないという意味ではありません。点は学校の所在地で、実際の活動の場所とは違うことがあります。同じ場所に重なる点は、地図を拡大すると分かれます。</p>

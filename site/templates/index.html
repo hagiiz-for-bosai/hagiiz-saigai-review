@@ -1,67 +1,95 @@
 {% extends "base.html" %}
-{% import "_m.html" as m %}
+{% import "_m.html" as m with context %}
+{% set open_pairs = M.pairs|selectattr('open')|list %}
+{% set first = open_pairs[0] if open_pairs else None %}
+{% set fd = first.d if first else None %}
+{% set q0 = M.qs[0] if M.qs else None %}
+{% block head %}{% set TL = [] %}{% for t in M.qs %}{% set _ = TL.append({'s': t.slug, 'no': t.no, 'q': t.q, 'u': url('toi/' ~ t.slug ~ '/') ~ '#kotaeru'}) %}{% endfor %}<script id="hz-today" type="application/json">{{ TL|tojson }}</script>{% endblock %}
 {% block main %}
-<h1 class="sr">HagiiZ 災害レビュー：過去の災害を根拠に、未来の問いに答える</h1>
-<section class="board gridbg" data-board data-threads='{{ threads|tojson }}' aria-label="全体図：過去の災害、法律、未来への問いのつながり">
-<svg class="board__threads" aria-hidden="true"></svg>
-<span class="board__scan" aria-hidden="true"></span>
-<div class="board__in">
-<span class="board__cap">過去の災害 → 法律 → 未来への問い</span>
+<section class="top">
+<div class="top__in">
+<div class="top__main">
+{% if fd %}<p class="top__hook" data-since="{{ fd.発生年月日 }}">{{ fd.name }}から <b data-y>{{ (today[:4]|int) - (fd.year|int) }}</b> 年。当時を覚えている人は、いま <b data-witness>–</b> 歳以上。</p>{% endif %}
+<h1 class="top__h1">過去の災害を教訓に、<br>未来に託された問いに答える。</h1>
+<p class="top__lead">{% if fd %}{{ fd.year }}年の{{ fd.name }}が残した{{ fd.qs|length }}の問いが、いまも答えを待っています。{% endif %}一次資料からつくった根拠カードを選んで、あなたの1文で答えてください。集まった答えは、防災士が次の動画で取り上げます。</p>
+<div class="top__cta">
+{% if q0 %}<a class="btn btn--pink btn--big" href="{{ url('toi/' ~ q0.slug ~ '/') }}#kotaeru" data-today-link><span>今日の問いに答える</span><span aria-hidden="true">→</span></a>{% endif %}
+<span class="small mute">5分・登録なし</span>
+<a class="jump" href="#zentai">全体図を見る ↓</a>
+</div>
+</div>
+<div class="can">
+<h2>ここでできること</h2>
+<ul>
+<li><a href="{{ url('toi/') }}"><span class="can__k">答える</span><span class="can__d">根拠を選んで1文。あなたの答えが、次の動画で取り上げられるかもしれない</span><span aria-hidden="true">→</span></a></li>
+<li><a href="{{ url('chiiki/') }}"><span class="can__k">見つける</span><span class="can__d">近くの大学の防災学生団体と、自分の町の防災の計画</span><span aria-hidden="true">→</span></a></li>
+{% if fd %}<li><a href="{{ url('saigai/' ~ fd.公開用の名前 ~ '/suuji/') }}"><span class="can__k">確かめる</span><span class="can__d">同じ被害でも、資料によって数字が違う。一次資料にあたる</span><span aria-hidden="true">→</span></a></li>{% endif %}
+<li><a href="{{ url('manabu/') }}"><span class="can__k">学ぶ</span><span class="can__d">防災士のレッスンで、根拠を深く知る</span><span aria-hidden="true">→</span></a></li>
+</ul>
+<p class="can__who">防災を学ぶ学生・学生団体、地域で備える人、自治体の担当者のための場所です。</p>
+</div>
+</div>
+</section>
 
-{% for p in M.pairs if p.open %}
-<div class="board__pair">
-<a class="file" href="{{ url('saigai/' ~ p.d.公開用の名前 ~ '/') }}" data-node="d-{{ p.d.公開用の名前 }}" style="--r:-3deg">
-<span class="pin" aria-hidden="true"></span><span class="tape" aria-hidden="true"></span>
-<span class="file__img"><img src="{{ asset('img/' ~ p.d.img ~ '.jpg') }}" alt="{{ p.d.種類 }}を表す図（画像生成）" width="596" height="796"><span class="file__year">{{ p.d.year }}</span></span>
-<span class="file__meta"><span>FILE {{ '%02d' % loop.index }} 災害</span><span class="label label--pink">公開中</span></span>
-<span class="file__name">{{ p.d.name }}</span>
-</a>
-<a class="law" href="{{ url('hou/' ~ p.l.公開用の名前 ~ '/') }}" data-node="l-{{ p.l.公開用の名前 }}" style="--r:3deg">
-<span class="pin" aria-hidden="true"></span>
-<span class="law__meta">LAW {{ '%02d' % loop.index }} 法律 / {{ p.l.制定年 }}</span>
-<span class="law__name">{{ p.l.法律名 }}</span>
-<span class="small">{{ p.d.name }}の{{ (p.l.制定年|int) - (p.d.year|int) }}年後にできた</span>
-</a>
+<section class="wrap zt" id="zentai">
+<h2 class="h2" style="font-size:28px;margin:0">全体図</h2>
+<p class="zt__lead">災害が法律を生み、その議論と教訓から問いが生まれました。1行が1つの災害です。気になるところを押して、そこから深く入れます。</p>
+<div class="zt__head" aria-hidden="true"><span>災害</span><span></span><span>そのあとできた法律</span><span></span><span>未来への問い</span><span></span><span>地域</span></div>
+<ol class="zt__list">
+{% for p in M.pairs %}
+{% if p.open %}
+{% set d = p.d %}{% set l = p.l %}
+{% set qk = d.qs|selectattr('kind','equalto','教訓')|list|length %}
+{% set qt = d.qs[0] if d.qs else None %}
+<li class="zt__item">
+<div class="zt__row">
+<a class="zc" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/') }}"><span style="display:flex;justify-content:space-between;align-items:center"><span class="zc__y">{{ d.year }}</span><span class="label" style="border-color:var(--ink);color:var(--ink)">公開中</span></span><span class="zc__n">{{ d.name }}</span><span class="zc__s">{{ d.種類 }}</span><span class="zc__go">災害のページ →</span></a>
+<span class="zt__wire" aria-hidden="true"></span>
+<a class="zc" href="{{ url('hou/' ~ l.公開用の名前 ~ '/') }}"><span class="zc__y">{{ l.制定年 }}</span><span class="zc__n">{{ l.法律名 }}</span><span class="zc__s">国会での話し合い {{ l.timeline|length }}回 ・ 改正 {{ l.amends|length }}回</span><span class="zc__go">法律のページ →</span></a>
+<span class="zt__wire" aria-hidden="true"></span>
+<div class="zc zc--q">
+{% if qt %}<span class="mono small mute"><span data-today-label>今日の問い</span> ・ <span data-today-no>{{ qt.no }}</span></span>
+<span class="zc__q" data-today-q>{{ qt.q }}</span>
+<a class="btn btn--line" href="{{ url('toi/' ~ qt.slug ~ '/') }}#kotaeru" data-today-link style="min-height:48px"><span>答える</span><span aria-hidden="true">→</span></a>{% endif %}
+<span style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px"><a href="{{ url('toi/') }}" style="color:var(--ink)">教訓から {{ qk }}</a><a href="{{ url('hou/' ~ l.公開用の名前 ~ '/') }}#toi" style="color:var(--ink)">国会から {{ l.qs|length }}</a></span>
 </div>
+<span class="zt__wire" aria-hidden="true"></span>
+<a class="zc" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/ima/') }}"><span class="zc__y">{{ d.munis|length }}</span><span class="zc__n" style="font-size:17px">被災した町は、いま</span><span class="zc__s">当時の町 → いまの市町村と防災の計画</span><span class="zc__go">地域へ →</span></a>
+</div>
+<div class="zt__more">
+<span>この災害をもっと</span>
+<a class="pillink" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/konkyo/') }}">根拠カード <span class="mono">{{ d.cards|length }}</span></a>
+<a class="pillink" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/suuji/') }}">資料によって違う数字 <span class="mono">{{ d.n_nums }}</span></a>
+<a class="pillink" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/shiryo/') }}">資料 <span class="mono">{{ d.sources|length }}</span></a>
+{% if l.lessons %}<a class="pillink" href="{{ url('manabu/') }}">防災士から学ぶ <span class="mono">{{ l.lessons|length }}</span></a>{% endif %}
+{% for ph in d.phen %}<a class="pillink" href="{{ url('kagaku/' ~ ph.公開用の名前 ~ '/') }}">現象：{{ ph.現象名 }}</a>{% endfor %}
+</div>
+</li>
+{% else %}
+<li class="zt__item" style="padding:14px 0">
+<div class="zt__row" style="align-items:center">
+<div class="zc zc--soon"><span class="zc__y">{{ p.d.year }}</span><span class="zc__n">{{ p.d.name }}</span></div>
+<span class="zt__wire zt__wire--soon" aria-hidden="true"></span>
+<div class="zc zc--soon"><span class="zc__y">{{ p.l.制定年 }}</span><span class="zc__n">{{ p.l.法律名 }}</span></div>
+<span class="zt__wire zt__wire--soon" aria-hidden="true"></span>
+<div class="zt__soon">準備中</div>
+<span class="zt__gap"></span><span class="zt__gap"></span>
+</div>
+</li>
+{% endif %}
 {% endfor %}
+</ol>
+<p class="small mute" style="margin:12px 0 0">扱ってほしい災害があれば <a href="{{ url('teikyo/') }}?kind=request" style="color:var(--ink);font-weight:700">知らせる →</a></p>
+</section>
 
-<div class="board__mid">
-<span class="hand board__hand">答えを待っている ↓</span>
-<div class="board__qs" role="list">
-{% for t in M.qs %}
-<a class="qcard" role="listitem" href="{{ url('toi/' ~ t.slug ~ '/') }}" data-node="q-{{ t.slug }}" style="--r:{{ ['-2deg','1.5deg','-1deg','2deg'][loop.index0 % 4] }};animation-delay:{{ (loop.index0 % 6) * 0.3 }}s">
-<span class="qcard__no">未来への問い {{ t.no }}</span>
-<span class="qcard__h">{{ t.h }}</span>
-<span class="qcard__q">{{ t.q }}</span>
-<span class="qcard__foot"><span>答え <span class="mono" data-count="{{ t.slug }}">–</span></span><b>答える→</b></span>
-</a>
-{% endfor %}
+<section class="wrap sec">
+<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+<h2 class="h2" style="margin:0">答えを待っている問い</h2>
+<a href="{{ url('toi/') }}" style="color:var(--ink);font-weight:700;min-height:44px;display:inline-flex;align-items:center">{{ M.qs|length }}件すべて見る →</a>
 </div>
-</div>
-<a class="btn board__more" href="{{ url('toi/') }}"><span>未来への問い {{ M.qs|length }}件をすべて見る</span><span class="mono">→</span></a>
-
-<div class="board__soonwrap">
-<span class="board__cap">準備中</span>
-<div class="board__soon">
-{% for p in M.pairs if not p.open %}
-<a class="soon" href="{{ url('saigai/') }}#{{ p.d.公開用の名前 }}">
-<span class="soon__img"><img src="{{ asset('img/' ~ p.d.img ~ '.jpg') }}" alt="" width="596" height="796" loading="lazy"></span>
-<span><span class="soon__y">{{ p.d.year }} → {{ p.l.制定年 }}</span><br><span class="soon__n">{{ p.d.name }}</span><br><span class="soon__s">{{ p.l.法律名 }}・準備中</span></span>
-</a>
-{% endfor %}
-</div>
-</div>
-</div>
+<div class="qlist">{% for t in M.qs[:3] %}{{ m.qrow(t, url) }}{% endfor %}</div>
 </section>
 {% endblock %}
 {% block urgency %}
-{% for d in M.dis if d.open %}{% if loop.first %}{{ m.urgency(d) }}{% endif %}{% endfor %}
-<section class="wrap" style="padding-top:22px;padding-bottom:28px">
-<h2 class="h2">ここは、過去の災害を根拠に、未来の問いに答える場所</h2>
-<div class="cards cards--entry" style="grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))">
-<div class="stat"><span class="stat__k">1. 問いをえらぶ</span><span class="small">災害が残した課題と、法律をつくった国会の議論から生まれた問い。</span></div>
-<div class="stat"><span class="stat__k">2. 根拠カードをえらんで答える</span><span class="small">一次資料からつくったカードを2枚まで。答えは1文。すぐに載ります。</span></div>
-<div class="stat stat--pink"><span class="stat__k">3. 防災士が取り上げる</span><span class="small">集まった答えを、次の動画で防災士が取り上げます。</span></div>
-</div>
-</section>
+{% if fd %}{{ m.urgency(fd) }}{% endif %}
 {% endblock %}

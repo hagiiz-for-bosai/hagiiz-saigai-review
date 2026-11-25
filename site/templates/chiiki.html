@@ -1,55 +1,65 @@
 {% extends "base.html" %}
 {% set first_hit = (M.prefs.values()|selectattr('hit')|first) %}
+{% block head %}{% if M.dantai %}
+<link rel="stylesheet" href="{{ asset('vendor/leaflet/leaflet.css') }}">
+<script defer src="{{ asset('vendor/leaflet/leaflet.js') }}"></script>
+<script defer src="{{ asset('js/dantai_map.js') }}"></script>
+{% endif %}{% endblock %}
 {% block main %}
-<div data-chiiki data-default="{{ first_hit.code[:2] if first_hit else '01' }}">
-<section class="qhead gridbg">
+<section class="qhead" style="padding-bottom:28px">
 <div class="wrap">
-<a class="crumb" href="{{ url('') }}"><span class="mono">←</span>全体図</a>
-<h1 class="h1">あなたの町の<br><span class="mark">防災の計画</span>をひらく</h1>
-<p class="qhead__then">全国{{ M.prefs|length }}都道府県と{{ "{:,}".format(M.prefs.values()|map(attribute="munis")|map("length")|sum) }}市区町村がつくっている「地域防災計画」への入口です。災害のとき、町がどう動くかが書いてあります。</p>
-<label class="field" style="margin-top:14px"><span class="field__l">町の名前でさがす</span><input class="input input--strong" type="search" placeholder="例：名古屋市" data-muni-search></label>
-<p class="small" style="margin:8px 0 0;font-weight:900" data-muni-count aria-live="polite" hidden></p>
-{% if M.dantai %}<a class="btn dlink" href="{{ url('chiiki/dantai/') }}"><span>大学の防災学生団体の地図</span><span class="mono">→</span></a>{% endif %}
+<a class="crumb" href="{{ url('') }}">← 全体図</a>
+<h1 class="h1">近くで、防災に取り組む学生を見つける</h1>
+<p class="qhead__then">全国の大学・短大・高専と、防災に関わる学生団体を地図にしました。点を押すと、その学校の団体が出ます。下では、自分の町の防災の計画もひらけます。</p>
 </div>
 </section>
 <div class="wrap">
-<section class="sec" data-prefs-sec>
-<h2 class="h2">都道府県からえらぶ</h2>
+{% if M.dantai %}
+<section class="sec" style="padding-top:24px">
+{% include "_dantai_map.html" %}
+<p class="small" style="margin:8px 0 0"><a href="{{ url('chiiki/dantai/') }}" style="color:var(--ink);font-weight:700">都道府県ごとの学校と団体の一覧 →</a>　<a href="{{ url('teikyo/') }}?kind=dantai" style="color:var(--ink)">載っていない団体を知らせる →</a></p>
+</section>
+{% endif %}
+
+<div data-chiiki data-default="{{ first_hit.code[:2] if first_hit else '01' }}">
+<section class="sec" style="padding-top:56px">
+<h2 class="h2" style="font-size:26px">あなたの町の、防災の計画をひらく</h2>
+<p class="lead" style="margin-top:0">全国{{ M.prefs|length }}都道府県と{{ "{:,}".format(M.prefs.values()|map(attribute="munis")|map("length")|sum) }}市区町村がつくっている「地域防災計画」への入口です。災害のとき、町がどう動くかが書いてあります。</p>
+<label class="field" style="margin-top:16px;max-width:560px"><span class="field__l">町の名前でさがす</span><input class="input input--strong" type="search" placeholder="例：名古屋市" data-muni-search></label>
+<p class="small" style="margin:8px 0 0;font-weight:700" data-muni-count aria-live="polite" hidden></p>
+</section>
+<section class="sec" data-prefs-sec style="padding-top:24px">
+<h3 class="h3" style="margin-top:0">都道府県からえらぶ</h3>
 <div class="prefs">
 {% for k, p in M.prefs.items() %}<button type="button" data-pref="{{ k }}" class="{{ 'hit' if p.hit }}" aria-pressed="false">{{ p.short }}</button>{% endfor %}
 </div>
-<p class="small mute">うすいピンクは、公開中の災害で被災した市町村がある都道府県です。</p>
+<p class="small mute"><span class="hitdot" aria-hidden="true"></span>は、公開中の災害で被災した市町村がある都道府県です。</p>
 </section>
-<section class="sec">
+<section class="sec" style="padding-top:16px">
 {% for k, p in M.prefs.items() %}
 <div data-pref-box="{{ k }}" hidden>
-<h2 class="h2">{{ p.name }}</h2>
-<div style="border:2px solid var(--ink)">
-<div class="muni" style="background:var(--ink);color:#fff" data-text="{{ p.name }}">
-<span class="muni__n">{{ p.name }}の計画</span>
-{% if p.url %}<a class="muni__l" href="{{ p.url }}" target="_blank" rel="noopener" style="color:#fff">{{ {'page':'計画をひらく →','pdf':'計画（PDF）→','page_u':'計画をひらく（未確認）→','pdf_u':'計画（PDF・未確認）→','home':'公式サイトでさがす →'}[p.kind] }}</a>{% if p.kind.endswith('_u') %}<a class="muni__fix" href="{{ url('teikyo/') }}?kind=link">ちがったら知らせる</a>{% endif %}{% else %}<span class="muni__l" style="color:#C9C9D2;font-weight:700">リンク準備中</span>{% endif %}
+<div class="prefhead">
+<h3 class="h2" style="margin:0">{{ p.name }}</h3>
+<span class="muni" data-text="{{ p.name }}" style="border:none;padding:0">{% if p.url %}<a class="muni__l" href="{{ p.url }}" target="_blank" rel="noopener">{{ p.name }}の計画{{ {'page':'をひらく →','pdf':'（PDF）→','page_u':'をひらく（未確認）→','pdf_u':'（PDF・未確認）→','home':'：公式サイトでさがす →'}[p.kind] }}</a>{% else %}<span class="muni__l muni__l--none">県の計画：リンク準備中</span>{% endif %}</span>
 </div>
 {% for code, mu in p.munis.items() %}
 <div class="muni" data-text="{{ mu.name }}">
-<div style="display:flex;flex-direction:column"><span class="muni__n">{{ mu.name }}</span>{% for d in mu.dis %}<a class="muni__s" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/ima/') }}">{{ d.name }}で被災</a>{% endfor %}{% if mu.orgs %}<details class="muni__orgs"><summary>この地域の大学の防災学生団体 {{ mu.orgs|length }}</summary><ul>{% for o in mu.orgs %}<li><a href="{{ o.evidence_url }}" target="_blank" rel="noopener nofollow">{{ o.name }}</a> <span class="dtag dtag--{{ o.rank }}">{{ o.drr_role }}</span><span class="small mute">　{{ o.schools|join('・') }}</span></li>{% endfor %}</ul><a class="small" href="{{ url('teikyo/') }}?kind=dantai&area={{ (p.name ~ mu.name)|urlencode }}">載っていない団体・誤りを知らせる</a></details>{% endif %}</div>
-{% if mu.url %}<a class="muni__l{% if mu.kind == 'home' %} muni__l--home{% endif %}" href="{{ mu.url }}" target="_blank" rel="noopener">{{ {'page':'計画をひらく →','pdf':'計画（PDF）→','page_u':'計画をひらく（未確認）→','pdf_u':'計画（PDF・未確認）→','home':'公式サイトでさがす →'}[mu.kind] }}</a>{% if mu.kind.endswith('_u') %}<a class="muni__fix" href="{{ url('teikyo/') }}?kind=link">ちがったら知らせる</a>{% endif %}{% else %}<span class="muni__l muni__l--none">リンク準備中</span>{% endif %}
+<div style="display:flex;flex-direction:column;gap:4px"><span class="muni__n">{{ mu.name }}</span>{% for d in mu.dis %}<a class="muni__s" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/ima/') }}">{{ d.name }}で被災</a>{% endfor %}{% if mu.orgs %}<details class="muni__orgs"><summary>この地域の大学の防災学生団体 {{ mu.orgs|length }}</summary><ul>{% for o in mu.orgs %}<li><a href="{{ o.evidence_url }}" target="_blank" rel="noopener nofollow" style="color:var(--ink)">{{ o.name }}</a> <span class="dtag dtag--{{ o.rank }}">{{ o.drr_role }}</span><span class="small mute">　{{ o.schools|join('・') }}</span></li>{% endfor %}</ul></details>{% endif %}</div>
+<div style="display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap">
+{% if mu.kind and mu.kind.endswith('_u') %}<span class="small" style="border:1px dashed var(--gray);border-radius:4px;padding:1px 8px;color:var(--text2)">未確認</span>{% endif %}
+{% if mu.url %}<a class="muni__l" href="{{ mu.url }}" target="_blank" rel="noopener">{{ {'page':'計画をひらく →','pdf':'計画をひらく（PDF）→','page_u':'計画をひらく →','pdf_u':'計画をひらく（PDF）→','home':'公式サイトでさがす →'}[mu.kind] }}</a>{% if mu.kind.endswith('_u') %}<a class="muni__fix" href="{{ url('teikyo/') }}?kind=link">ちがったら知らせる</a>{% endif %}{% else %}<span class="muni__l muni__l--none">リンク準備中</span>{% endif %}
+</div>
 </div>
 {% endfor %}
 {% if not p.munis %}<div class="muni"><span class="muni__s">市区町村の一覧は、リンクの取りこみが終わると、ここに並びます。</span></div>{% endif %}
 </div>
-</div>
 {% endfor %}
+<p class="small mute" style="margin-top:12px">「未確認」は、リンク先が本当にその町の計画かを、まだ防災士が確かめていないものです。計画のよしあしで色分けや順位づけはしません。</p>
 </section>
-{% if M.dantai %}<section class="sec">
-<h2 class="h2">大学の防災学生団体について</h2>
-{% include "_dantai_note.html" %}
-</section>
-{% endif %}
 <section class="sec">
 <h2 class="h2">リンクが切れていたら</h2>
-<p style="margin:0 0 12px">町のサイトが変わると、リンクが開かなくなることがあります。見つけたら教えてください。</p>
-<a class="btn" href="{{ url('teikyo/') }}?kind=link"><span>リンク切れを知らせる</span><span class="mono">→</span></a>
-<p class="small mute">計画のよしあしで色分けや順位づけはしません。</p>
+<p style="margin:0 0 12px;color:var(--text2)">町のサイトが変わると、リンクが開かなくなることがあります。見つけたら教えてください。</p>
+<a class="btn" href="{{ url('teikyo/') }}?kind=link"><span>リンク切れを知らせる</span><span aria-hidden="true">→</span></a>
 </section>
 </div>
 </div>

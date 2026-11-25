@@ -1,48 +1,62 @@
 {% extends "base.html" %}
-{% import "_m.html" as m %}
+{% import "_m.html" as m with context %}
 {% set law = d.laws[0] if d.laws else None %}
 {% block main %}
-<section class="hero">
-<img src="{{ asset('img/' ~ d.img ~ '.jpg') }}" alt="{{ d.種類 }}を表す図（画像生成）" width="596" height="796">
-<span class="hero__scan" aria-hidden="true"></span>
-<span class="hero__badge"><span class="blink">●</span> 公開中</span>
-<div class="hero__txt">
-<a class="label label--ink" href="{{ url('saigai/') }}" style="text-decoration:none">← 災害ファイル</a>
-<span class="label label--ink mono">FILE / {{ d.発生年月日|replace('-', '.') }} / {{ d.種類 }}</span>
-<h1 class="h1 glitch"><span>{{ d.name }}</span></h1>
+<section class="qhead">
+<div class="wrap">
+<a class="crumb" href="{{ url('') }}">← 全体図</a>
+<div class="dhead">
+<div>
+<div class="dhead__meta"><span>FILE / {{ d.発生年月日|replace('-', '.') }} / {{ d.種類 }}</span><span class="label" style="border-color:var(--ink);color:var(--ink);font-family:var(--sans)">公開中</span></div>
+<h1 class="dhead__name">{{ d.name }}</h1>
+<p class="lead">この災害から生まれた問いが{{ d.qs|length }}件、答えを待っています。{% if law %}{{ (law.制定年|int) - (d.year|int) }}年後に、{{ law.法律名 }}ができました。{% endif %}</p>
+<div style="margin-top:24px;display:flex;flex-wrap:wrap;gap:12px">
+{% if d.qs %}<a class="btn btn--pink btn--big" href="{{ url('toi/' ~ d.qs[0].slug ~ '/') }}#kotaeru"><span>この災害の問いに答える</span><span aria-hidden="true">→</span></a>{% endif %}
+{% if law %}<a class="btn btn--big" href="{{ url('hou/' ~ law.公開用の名前 ~ '/') }}#video"><span>防災士の解説動画</span></a>{% endif %}
+</div>
+</div>
+<dl class="since" data-since="{{ d.発生年月日 }}">
+<div><dt>この災害から</dt><dd><span data-y>{{ (today[:4]|int) - (d.year|int) }}</span><small>年</small></dd></div>
+{% if d.year|int <= 1980 %}<div><dt>当時小学生だった人</dt><dd><span data-witness>–</span><small>歳以上</small></dd></div>
+<div class="since__w">直接話を聞ける時間は、限られています。</div>{% endif %}
+</dl>
+</div>
 </div>
 </section>
-{{ m.urgency(d) }}
 <div class="wrap">
-{% if d.doc and d.doc.s.get('リード') %}<div class="lead prose">{{ d.doc.s['リード']|safe }}</div>{% endif %}
+{% if d.doc and d.doc.s.get('リード') %}<div class="lead prose" style="margin-top:32px">{{ d.doc.s['リード']|safe }}</div>{% endif %}
 {{ m.videos(d.videos, '防災士の解説') }}
-{{ m.docsec(d.doc, ['あのとき', 'なぜ被害が大きくなったか', 'その後に変わったこと'], 'このファイルの中身') }}
+{{ m.docsec(d.doc, ['あのとき', 'なぜ被害が大きくなったか', 'その後に変わったこと'], 'この災害のこと') }}
 {% if d.note %}<div style="padding-top:12px">{{ m.note(d.note) }}</div>{% endif %}
 <section class="sec">
 <h2 class="h2">この災害を、8つの入口から</h2>
 <div class="cards cards--entry">
-{% if law %}{{ m.entry(url('hou/' ~ law.公開用の名前 ~ '/') ~ '#video', '防災士の解説動画', 'HagiiZの防災士が、この災害と' ~ law.法律名 ~ 'を語る。', '▶', 'ink', 'M12 10h76v56H12z M42 24l22 14-22 14z') }}{% endif %}
-{{ m.entry(url('toi/'), '未来への問い', '答えを待っている問い。根拠を選んで答えよう。', d.qs|length, 'pink', 'M50 6L92 74H8z M50 30v22 M50 60v4') }}
-{{ m.entry(url('saigai/' ~ d.公開用の名前 ~ '/konkyo/'), '根拠カード', '答えるときに使う、一次資料からつくったカード。', d.cards|length, 'tint', 'M14 22h52v52H14z M26 10h52v52') }}
-{{ m.entry(url('saigai/' ~ d.公開用の名前 ~ '/suuji/'), '資料によって違う数字', '同じ被害でも、資料によって数字が違う。', d.n_nums, 'white', 'M10 72h80 M18 72V34h18v38 M50 72V12h18v60') }}
-{% if law %}{{ m.entry(url('hou/' ~ law.公開用の名前 ~ '/') ~ '#kokkai', '国会での話し合い', law.法律名 ~ 'ができるまで。', law.timeline|length, 'ink', 'M10 28L50 6l40 22z M20 34v30 M40 34v30 M60 34v30 M80 34v30 M8 72h84') }}{% endif %}
-{{ m.entry(url('saigai/' ~ d.公開用の名前 ~ '/ima/'), '被災した地域は、いま', '当時の町は、いまどの市町村？ 防災の計画へ。', d.munis|length, 'pink', 'M50 74C30 48 26 40 26 30a24 24 0 0 1 48 0c0 10-4 18-24 44z M50 22a8 8 0 1 0 .1 0') }}
-{{ m.entry(url('saigai/' ~ d.公開用の名前 ~ '/shiryo/'), '資料', '報告書、論文、記録集、伝承碑。どこにあるか。', d.sources|length, 'white', 'M14 22h52v52H14z M26 10h52v52 M24 36h32 M24 48h32') }}
-{{ m.entry(url('manabu/'), '学ぶ', '防災士のレッスンで、根拠を深く知る。', (law.lessons|length if law else 0), 'tint', 'M16 66L60 22l12 12-44 44-14 2z M54 28l12 12') }}
+{{ m.entry(url('toi/'), '未来への問い', '答えを待っている問い。根拠を選んで答える。', d.qs|length, '', '') }}
+{{ m.entry(url('saigai/' ~ d.公開用の名前 ~ '/konkyo/'), '根拠カード', '答えるときに使う、一次資料からつくったカード。', d.cards|length, '', '') }}
+{{ m.entry(url('saigai/' ~ d.公開用の名前 ~ '/suuji/'), '資料によって違う数字', '同じ被害でも、資料によって数字が違う。', d.n_nums, '', '') }}
+{% if law %}{{ m.entry(url('hou/' ~ law.公開用の名前 ~ '/') ~ '#kokkai', '国会での話し合い', law.法律名 ~ 'ができるまで。', law.timeline|length, '', '') }}{% endif %}
+{{ m.entry(url('saigai/' ~ d.公開用の名前 ~ '/ima/'), '被災した地域は、いま', '当時の町は、いまどの市町村か。防災の計画へ。', d.munis|length, '', '') }}
+{{ m.entry(url('saigai/' ~ d.公開用の名前 ~ '/shiryo/'), '資料', '報告書、論文、記録集、伝承碑。どこにあるか。', d.sources|length, '', '') }}
+{{ m.entry(url('manabu/'), '学ぶ', '防災士のレッスンで、根拠を深く知る。', (law.lessons|length if law else 0), '', '') }}
+{% if law %}{{ m.entry(url('hou/' ~ law.公開用の名前 ~ '/') ~ '#video', '防災士の解説動画', 'HagiiZの防災士が、この災害と' ~ law.法律名 ~ 'を語る。', '', '', '') }}{% endif %}
 </div>
 </section>
-
 <section class="sec">
-<h2 class="h2">答えを待っている問い</h2>
+<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+<h2 class="h2" style="margin:0">答えを待っている問い</h2>
+<a href="{{ url('toi/') }}" style="color:var(--ink);font-weight:700">{{ d.qs|length }}件すべて見る →</a>
+</div>
 <div class="qlist">{% for t in d.qs[:3] %}{{ m.qrow(t, url) }}{% endfor %}</div>
-<a class="btn btn--pink btn--big" href="{{ url('toi/') }}" style="margin-top:18px"><span>すべての問い {{ d.qs|length }}件</span><span class="mono">→</span></a>
 </section>
-
-{% if d.phen %}
-<section class="sec">
+<section class="sec" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:32px">
+{% if d.phen %}<div>
 <h2 class="h2">この災害で起きた現象</h2>
-{% for p in d.phen %}<a class="linkrow" href="{{ url('kagaku/' ~ p.公開用の名前 ~ '/') }}"><span>{{ p.現象名 }}</span><span class="mono">→</span></a>{% endfor %}
+{% for p in d.phen %}<a class="linkrow" href="{{ url('kagaku/' ~ p.公開用の名前 ~ '/') }}"><span>{{ p.現象名 }}</span><span aria-hidden="true">→</span></a>{% endfor %}
+</div>{% endif %}
+{% if law %}<div>
+<h2 class="h2">この災害からできた法律</h2>
+<a class="law" href="{{ url('hou/' ~ law.公開用の名前 ~ '/') }}"><span class="law__meta">{{ law.制定年 }}</span><span class="law__name">{{ law.法律名 }}</span><span class="small mute">国会での話し合い {{ law.timeline|length }}回 ・ その後の改正 {{ law.amends|length }}回</span></a>
+</div>{% endif %}
 </section>
-{% endif %}
 </div>
 {% endblock %}

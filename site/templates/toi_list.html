@@ -1,31 +1,27 @@
 {% extends "base.html" %}
-{% import "_m.html" as m %}
+{% import "_m.html" as m with context %}
 {% block main %}
-<section class="qhead gridbg">
+<section class="qhead">
 <div class="wrap">
-<a class="crumb" href="{{ url('') }}"><span class="mono">←</span>全体図</a>
-<h1 class="h1 glitch">未来への問い <span class="mark">{{ M.qs|length }}</span></h1>
-<p class="qhead__then">過去の災害が残した課題（教訓）と、法律をつくった国会の議論から生まれた問いです。根拠カードを選んで、1文で答えられます。</p>
-<div class="stats" style="margin-top:14px">
-<div class="stat stat--ink"><span class="stat__k">問い</span><span class="stat__v">{{ M.qs|length }}</span></div>
-<div class="stat"><span class="stat__k">答え</span><span class="stat__v" data-count="*">–</span></div>
-<div class="stat stat--pink"><span class="stat__k">根拠カード</span><span class="stat__v">{{ M.cards|length }}</span></div>
-</div>
+<a class="crumb" href="{{ url('') }}">← 全体図</a>
+<h1 class="h1">未来への問い <span class="mono" style="font-weight:600">{{ M.qs|length }}</span></h1>
+<p class="qhead__then">過去の災害が残した課題（教訓）と、法律をつくった国会の議論から生まれた問いです。根拠カードを選んで、1文で答えます。</p>
 </div>
 </section>
 <div class="wrap">
 <section class="sec">
+{% set nk = M.qs|selectattr('kind','equalto','国会')|list|length %}
 <div class="filters" role="group" aria-label="問いを絞り込む" data-filter-group="#qlist">
-<button class="chip" type="button" data-filter="" aria-pressed="true">すべて</button>
-<button class="chip chip--pink" type="button" data-filter="教訓" aria-pressed="false">災害の教訓</button>
-<button class="chip" type="button" data-filter="国会" aria-pressed="false">国会の問い</button>
+<button class="chip" type="button" data-filter="" aria-pressed="true">すべて {{ M.qs|length }}</button>
+<button class="chip" type="button" data-filter="教訓" aria-pressed="false">災害の教訓から {{ M.qs|length - nk }}</button>
+<button class="chip" type="button" data-filter="国会" aria-pressed="false">国会の議論から {{ nk }}</button>
 </div>
 <div class="qlist" id="qlist">{% for t in M.qs %}{{ m.qrow(t, url) }}{% endfor %}</div>
 </section>
 <section class="sec">
 <h2 class="h2">ここにない問いに気づいたら</h2>
-<p style="margin:0 0 12px">資料にもとづく課題や問いを、一言で出せます。防災士が取り上げると、新しい問いになります。</p>
-<a class="btn" href="{{ url('teikyo/') }}?kind=toi"><span>問いを提案する</span><span class="mono">→</span></a>
+<p style="margin:0 0 12px;color:var(--text2)">資料にもとづく課題や問いを、一言で出せます。防災士が取り上げると、新しい問いになります。</p>
+<a class="btn" href="{{ url('teikyo/') }}?kind=toi"><span>問いを提案する</span><span aria-hidden="true">→</span></a>
 </section>
 </div>
 {% endblock %}

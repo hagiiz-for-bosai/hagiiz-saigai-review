@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block main %}
 <div class="wrap">
-<a class="crumb" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/') }}"><span class="mono">←</span>{{ d.name }}</a>
+<a class="crumb" href="{{ url('saigai/' ~ d.公開用の名前 ~ '/') }}">← {{ d.name }}</a>
 <section class="sec" style="padding-top:8px">
 <span class="label label--line">確定した事実</span>
-<h1 class="h1" style="margin-top:8px">資料によって<br><span class="mark">違う数字</span></h1>
+<h1 class="h1" style="margin-top:8px">資料によって違う数字</h1>
 <p class="lead">要約ではなく、「どの資料が、どの範囲で、何をいくつと言っているか」を並べています。資料によって違う数字は、そのまま並べています。<span class="diff">資料によって違う</span> の印が付いた項目は、数え方や範囲の違いを確かめる手がかりです。</p>
 </section>
 {% for g in d.nums %}
@@ -12,7 +12,7 @@
 <h2 class="h2">{{ g.scope }}</h2>
 <div class="ngrid">
 {% for r in g.rows %}
-<div class="ncard">
+<div class="ncard{% if r.diff %} ncard--diff{% endif %}">
 <div class="ncard__h"><span>{{ r.k }}</span>{% if r.diff %}<span class="diff">資料によって違う</span>{% endif %}</div>
 <div class="ncard__rows">
 {% for v in r.vals %}
